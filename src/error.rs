@@ -3,10 +3,11 @@ use serde_json::json;
 
 pub type Result<T> = std::result::Result<T, AppError>;
 
+// All possible errors our handlers can return
 pub enum AppError {
-    Database(sqlx::Error),
-    NotFound(String),
-    BadRequest(String),
+    Database(sqlx::Error),  // DB errors
+    NotFound(String),  // 404
+    BadRequest(String),  // 400
 }
 
 impl From<sqlx::Error> for AppError {
@@ -15,7 +16,7 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
-
+// Axum calls this to turn our error into an HTTP response
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, message) = match self {

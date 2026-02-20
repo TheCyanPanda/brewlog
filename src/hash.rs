@@ -38,6 +38,27 @@ fn roaster_code(roaster: Option<&str>) -> String {
 }
 
 
+// Generate a brew hash from a bag has + brew number
+// eg "MCR-0042", 3 -> "MCR-0042-B003"
+pub fn make_brew_hash(bag_hash: &str, brew_number: i64) -> String {
+    format!("{}-B{:03}", bag_hash, brew_number)
+}
+
+
+// Count existing brews for a bag and return the next brew number
+pub async fn next_brew_number(pool: &PgPool, coffee_bag_id: i32) -> Result<i64> {
+    let count: i64 = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM brews WHERE coffee_bag_id = $1",
+        coffee_bag_id
+    )
+    .fetch_one(pool)
+    .await?
+    .unwrap_or(0);
+
+    Ok(count + 1)
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;

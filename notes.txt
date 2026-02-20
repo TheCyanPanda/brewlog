@@ -1,0 +1,20 @@
+# Terminate all active connections in postgres db
+psql postgres://brewlog:test123@localhost:3000/postgres -c \
+  "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'brewlog_db' AND pid <> pg_backend_pid();"
+
+# Create schema
+sqlx database setup
+
+# connect to db
+psql postgres://brewlog:test123@localhost:3000/brewlog_db
+
+# List all tables
+psql -h ~/pgdata -p 3000 -U brewlog -d brewlog_db -c "\dt"
+
+# Insert a grinder
+curl -X POST http://localhost:3001/grinders \
+  -H "Content-Type: application/json" \
+  -d '{"name": "ZP6 Special", "notes": "Single dose"}'
+
+# List the grinders
+curl http://localhost:3001/grinders

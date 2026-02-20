@@ -18,6 +18,8 @@ CREATE TABLE brewers (
     name        TEXT NOT NULL,           -- e.g. "Hario Glass V60"
     brew_method TEXT NOT NULL,           -- 'filter' | 'espresso' | 'immersion' | 'other'
     brew_type   TEXT,                    -- 'v60' | 'chemex' | 'aeropress' | 'espresso' | etc
+    brand       TEXT,
+    model       TEXT,
     notes       TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -34,17 +36,17 @@ CREATE TABLE coffee_bags (
     bag_hash                TEXT UNIQUE,
 
     -- Roaster info
-    roaster                 TEXT,                   -- "Morgon Coffee Roasters"
-    roaster_origin_city     TEXT,                   -- "Gothenburg"
-    roaster_origin_country  TEXT,                   -- "Sweden"
+    roaster                 TEXT,      -- "Morgon Coffee Roasters"
+    roaster_origin_city     TEXT,      -- "Gothenburg"
+    roaster_origin_country  TEXT,      -- "Sweden"
 
     -- Bean info
-    origin_country          TEXT,                   -- "Ethiopia"
-    origin_region           TEXT,                   -- "Yirgacheffe"
-    variety                 TEXT,                   -- "Heirloom", "Gesha", "Typica"
-    process                 TEXT,                   -- "Washed", "Natural", "Honey"
-    taste_notes             TEXT[],                 -- array: ["blueberry", "dark chocolate"]
-    bean_type               TEXT,                   -- "Heirloom", "SL28", etc (maps to "type" in spec)
+    origin_country          TEXT,      -- "Ethiopia"
+    origin_region           TEXT,      -- "Yirgacheffe"
+    variety                 TEXT,      -- "Heirloom", "Gesha", "Typica"
+    process                 TEXT,      -- "Washed", "Natural", "Honey"
+    taste_notes             TEXT[],    -- array: ["blueberry", "dark chocolate"]
+    bean_type               TEXT,      -- "Heirloom", "SL28", etc (maps to "type" in spec)
 
     -- Dates
     harvest_date            DATE,

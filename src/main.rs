@@ -21,13 +21,14 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    // Read config from env
     let database_url = std::env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set in .env");
     let host = std::env::var("SERVER_HOST").unwrap_or("0.0.0.0".into());
     let port = std::env::var("SERVER_PORT").unwrap_or("3000".into());
 
     info!("Connecting to database...");
-    let pool = PgPoolOptions::new()
+    let pool = PgPoolOptions::new()  // Pool: Let's multiple requests use the DB simultaneously
         .max_connections(10)
         .connect(&database_url)
         .await?;
@@ -35,14 +36,20 @@ async fn main() -> anyhow::Result<()> {
     info!("Running migrations...");
     sqlx::migrate!("./migrations").run(&pool).await?; // Read SQL Schema
 
-    let app: Router = Router::new()
+    let app: Router = Router::new() // register routers
         .merge(routes::coffee_bags::router())
         .merge(routes::brews::router())
         .merge(routes::equipment::router())
-        .merge(routes::ha::router())
-        .layer(CorsLayer::permissive())
-        .layer(TraceLayer::new_for_http())
-        .with_state(pool);
+        .merge(routes::ha::router()) // Home assistant
+        .layer(CorsLayer::permissive()) // Allow android app to connect
+        .layer(TraceLayer::new_for_http())  // Log all requests
+        .with_state(pool);  // Make available to handlers
+
+    let addr: String = format!("{}:{}", host, port);
+    info!("Brewlog server listening on http://{}", addr);
+
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, app).await?;
 
     Ok(())
 

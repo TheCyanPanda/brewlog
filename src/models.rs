@@ -39,6 +39,8 @@ pub struct CreateBrewer {
     pub name: String,
     pub brew_method: String,
     pub brew_type: Option<String>,
+    pub brand: Option<String>,
+    pub model: Option<String>,
     pub notes: Option<String>,
 }
 
