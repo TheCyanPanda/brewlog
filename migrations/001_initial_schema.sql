@@ -43,6 +43,7 @@ CREATE TABLE coffee_bags (
     -- Bean info
     origin_country          TEXT,      -- "Ethiopia"
     origin_region           TEXT,      -- "Yirgacheffe"
+    roast_level             TEXT,      -- "Light", "Dark" etc
     variety                 TEXT,      -- "Heirloom", "Gesha", "Typica"
     process                 TEXT,      -- "Washed", "Natural", "Honey"
     taste_notes             TEXT[],    -- array: ["blueberry", "dark chocolate"]

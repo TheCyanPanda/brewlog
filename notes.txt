@@ -2,6 +2,9 @@
 psql postgres://brewlog:test123@localhost:3000/postgres -c \
   "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'brewlog_db' AND pid <> pg_backend_pid();"
 
+# sqlx database drop
+# sqlx migrate run
+
 # Create schema
 sqlx database setup
 
@@ -18,3 +21,13 @@ curl -X POST http://localhost:3001/grinders \
 
 # List the grinders
 curl http://localhost:3001/grinders
+
+# Clear everything
+psql -h ~/pgdata -p 3000 -U brewlog -d brewlog_db -c "TRUNCATE grinders, brewers, coffee_bags, brews RESTART IDENTITY CASCADE;"
+
+# Or delete a specific row
+psql -h ~/pgdata -p 3000 -U brewlog -d brewlog_db -c "DELETE FROM grinders WHERE id = 1;"
+
+# Drop everything and re-migrate
+sqlx migrate revert
+sqlx migrate run
