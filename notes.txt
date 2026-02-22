@@ -3,6 +3,7 @@ psql postgres://brewlog:test123@localhost:3000/postgres -c \
   "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'brewlog_db' AND pid <> pg_backend_pid();"
 
 # sqlx database drop
+# sqlx database setup
 # sqlx migrate run
 
 # Create schema

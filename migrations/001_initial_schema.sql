@@ -84,10 +84,10 @@ CREATE TABLE brews (
     filter_paper    TEXT,               -- "Cafec Abaca"
 
     -- Measurements (store canonical values; conversions done in app)
-    coffee_grams    NUMERIC(6,1),       -- e.g. 15.0
-    water_grams     NUMERIC(7,1),       -- e.g. 250.0
+    coffee_grams    FLOAT8,       -- e.g. 15.0
+    water_grams     FLOAT8,       -- e.g. 250.0
     -- ratio is DERIVED: coffee_grams / water_grams — NOT stored to avoid staleness
-    water_temp_c    NUMERIC(5,1),       -- always store Celsius; convert in UI
+    water_temp_c    FLOAT8,       -- always store Celsius; convert in UI
     brew_time_secs  INT,                -- store as seconds; display as mm:ss in UI
 
     -- Brew steps: either free text or structured array
