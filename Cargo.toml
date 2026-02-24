@@ -1,41 +1,6 @@
-[package]
-name = "brewlog"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-# Web framework. Axum is built on top of tokio (async runtime and tower (middleware)
-axum = { version = "0.7", features = ["multipart"] }
-
-# async runtime
-tokio = { version = "1", features=["full"] }
-
-# PostgreSQL driver with compile time query checking
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json"] }
-
-# JSON serialization
-serde = { version = "1", features= ["derive"] }
-serde_json = "1"
-
-## UUIDs
-uuid = { version = "1", features= ["serde", "v4"] }
-
-# Timestamps
-chrono = { version = "0.4", features = ["serde"] }
-
-# Loads .env files into environment variables at startup
-dotenvy = "0.15"
-
-# anyhow::Error: catch all error type (for main() and startup code)
-anyhow = "1"
-
-# Logging
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-
-# request logging
-tower-http = { version = "0.5", features = ["cors", "trace"] }
-
-
-
-
+[workspace]
+members = [
+    "backend",
+    "shared",
+]
+resolver = "2"

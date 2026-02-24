@@ -164,7 +164,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "brewlog"
+name = "brewlog-backend"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -179,6 +179,15 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+]
+
+[[package]]
+name = "brewlog-shared"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
