@@ -3,6 +3,7 @@ mod models;
 mod error;
 mod hash;
 mod routes;
+mod utils;
 
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
@@ -40,6 +41,7 @@ async fn main() -> anyhow::Result<()> {
         .merge(routes::coffee_bags::router())
         .merge(routes::brews::router())
         .merge(routes::equipment::router())
+        .merge(routes::export::router())
         .merge(routes::ha::router()) // Home assistant
         .layer(CorsLayer::permissive()) // Allow android app to connect
         .layer(TraceLayer::new_for_http())  // Log all requests

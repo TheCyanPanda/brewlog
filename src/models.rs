@@ -2,6 +2,8 @@ use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
+use crate::utils::{celsius_to_fahrenheit, compute_ratio, format_brew_time};
+
 // ======= Equipment =======
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -114,20 +116,17 @@ pub struct Brew {
 impl Brew {
     // Compute ratio from stored grams (stored as 1:f64, eg: 15g coffee / 250g water = 1:16.7)
     pub fn ratio(&self) -> Option<f64> {
-        match (self.coffee_grams, self.water_grams) {
-            (Some(c), Some(w)) if c > 0.0 => Some(w / c),
-            _ => None,
-        }
+        compute_ratio(self.coffee_grams, self.water_grams)
     }
 
     // Convert from Celcius -> Farenheit
     pub fn water_temp_f(&self) -> Option<f64> {
-        self.water_temp_c.map(|c: f64| c * 9.0 / 5.0 + 32.0)  // The closure |c| is like a lambda
+        celsius_to_fahrenheit(self.water_temp_c)
     }
 
     // Format brew_time_secs as 'MM:SS' String
     pub fn brew_time_display(&self) -> Option<String> {
-        self.brew_time_secs.map(|s| format!("{:02}:{:02}", s / 60, s % 60))
+        format_brew_time(self.brew_time_secs)
     }
 }
 

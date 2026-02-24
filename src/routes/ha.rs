@@ -35,15 +35,16 @@ pub fn router() -> Router<PgPool> {
 }
 
 #[derive(Serialize)]
-struct LatestBrew {
-    brew_hash: Option<String>,
-    rating: Option<String>,
-    coffee: Option<String>,     // bag's roaster + origin
-    grind_setting: Option<String>,
-    ratio: Option<f64>,
-    water_temp_c: Option<f64>,
-    brew_time_display: Option<String>,
-    brew_datetime: Option<chrono::DateTime<Utc>>,
+pub struct LatestBrew {
+    pub brew_hash: Option<String>,
+    pub rating: Option<String>,
+    pub coffee: Option<String>,  // Roaster and origin of coffe bag
+    pub grind_setting: Option<String>,
+    pub ratio: Option<f64>,
+    pub water_temp_c: Option<f64>,
+    pub water_temp_f: Option<f64>,
+    pub brew_time_display: Option<String>,
+    pub brew_datetime: Option<chrono::DateTime<Utc>>,
 }
 
 async fn latest_brew(State(pool): State<PgPool>) -> Result<Json<LatestBrew>> {
@@ -65,7 +66,7 @@ async fn latest_brew(State(pool): State<PgPool>) -> Result<Json<LatestBrew>> {
         None => LatestBrew {
             brew_hash: None, rating: None, coffee: None,
             grind_setting: None, ratio: None, water_temp_c: None,
-            brew_time_display: None, brew_datetime: None,
+            water_temp_f: None, brew_time_display: None, brew_datetime: None,
         },
         Some(r) => {
             let ratio = match (r.coffee_grams, r.water_grams) {
@@ -86,6 +87,8 @@ async fn latest_brew(State(pool): State<PgPool>) -> Result<Json<LatestBrew>> {
                 format!("{:02}:{:02}", s / 60, s % 60)
             });
 
+            // temp C -> F
+            let water_temp_f: Option<f64> = r.water_temp_c.map(|c: f64| c * 9.0 / 5.0 + 32.0);
             LatestBrew {
                 brew_hash: r.brew_hash,
                 rating: r.rating,
@@ -93,6 +96,7 @@ async fn latest_brew(State(pool): State<PgPool>) -> Result<Json<LatestBrew>> {
                 grind_setting: r.grind_setting,
                 ratio,
                 water_temp_c: r.water_temp_c.map(|t| t),
+                water_temp_f,
                 brew_time_display,
                 brew_datetime: Some(r.brew_datetime),
             }
