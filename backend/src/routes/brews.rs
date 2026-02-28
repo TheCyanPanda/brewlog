@@ -28,44 +28,28 @@ async fn list_brews(
     let brews: Vec<Brew> = match (filter.rating, filter.coffee_bag_id) {
         (Some(rating), Some(bag_id)) => sqlx::query_as!(
             Brew,
-            r#"SELECT id, brew_hash, coffee_bag_id, brew_datetime, grinder_id,
-                      grind_setting, brewer_id, filter_paper, coffee_grams,
-                      water_grams, water_temp_c, brew_time_secs, brew_steps,
-                      rating, review, notes, created_at
-               FROM brews WHERE rating = $1 AND coffee_bag_id = $2
+            r#"SELECT * FROM brews WHERE rating = $1 AND coffee_bag_id = $2
                ORDER BY brew_datetime DESC LIMIT $3 OFFSET $4"#,
             rating, bag_id, limit, offset
         ).fetch_all(&pool).await?,
 
         (Some(rating), None) => sqlx::query_as!(
             Brew,
-            r#"SELECT id, brew_hash, coffee_bag_id, brew_datetime, grinder_id,
-                      grind_setting, brewer_id, filter_paper, coffee_grams,
-                      water_grams, water_temp_c, brew_time_secs, brew_steps,
-                      rating, review, notes, created_at
-               FROM brews WHERE rating = $1
+            r#"SELECT * FROM brews WHERE rating = $1
                ORDER BY brew_datetime DESC LIMIT $2 OFFSET $3"#,
             rating, limit, offset
         ).fetch_all(&pool).await?,
 
         (None, Some(bag_id)) => sqlx::query_as!(
             Brew,
-            r#"SELECT id, brew_hash, coffee_bag_id, brew_datetime, grinder_id,
-                      grind_setting, brewer_id, filter_paper, coffee_grams,
-                      water_grams, water_temp_c, brew_time_secs, brew_steps,
-                      rating, review, notes, created_at
-               FROM brews WHERE coffee_bag_id = $1
+            r#"SELECT * FROM brews WHERE coffee_bag_id = $1
                ORDER BY brew_datetime DESC LIMIT $2 OFFSET $3"#,
             bag_id, limit, offset
         ).fetch_all(&pool).await?,
 
         (None, None) => sqlx::query_as!(
             Brew,
-            r#"SELECT id, brew_hash, coffee_bag_id, brew_datetime, grinder_id,
-                      grind_setting, brewer_id, filter_paper, coffee_grams,
-                      water_grams, water_temp_c, brew_time_secs, brew_steps,
-                      rating, review, notes, created_at
-               FROM brews
+            r#"SELECT * FROM brews
                ORDER BY brew_datetime DESC LIMIT $1 OFFSET $2"#,
             limit, offset
         ).fetch_all(&pool).await?,
@@ -82,11 +66,7 @@ async fn get_brew(
 ) -> Result<Json<BrewResponse>> {
     let brew: Brew = sqlx::query_as!(
         Brew,
-        r#"SELECT id, brew_hash, coffee_bag_id, brew_datetime, grinder_id,
-                  grind_setting, brewer_id, filter_paper, coffee_grams,
-                  water_grams, water_temp_c, brew_time_secs, brew_steps,
-                  rating, review, notes, created_at
-         FROM brews WHERE id = $1"#,
+        r#"SELECT * FROM brews WHERE id = $1"#,
         id
     )
     .fetch_optional(&pool)
@@ -110,10 +90,7 @@ async fn create_brew(
              brewer_id, filter_paper, coffee_grams, water_grams,
              water_temp_c, brew_time_secs, brew_steps, rating, review, notes)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-           RETURNING id, brew_hash, coffee_bag_id, brew_datetime, grinder_id,
-                     grind_setting, brewer_id, filter_paper, coffee_grams,
-                     water_grams, water_temp_c, brew_time_secs, brew_steps,
-                     rating, review, notes, created_at"#,
+           RETURNING *"#,
         body.coffee_bag_id,
         brew_datetime,
         body.grinder_id,
@@ -153,10 +130,7 @@ async fn create_brew(
                     sqlx::query_as!(
                         Brew,
                         r#"UPDATE brews SET brew_hash = $1 WHERE id = $2
-                           RETURNING id, brew_hash, coffee_bag_id, brew_datetime,
-                                     grinder_id, grind_setting, brewer_id, filter_paper,
-                                     coffee_grams, water_grams, water_temp_c, brew_time_secs,
-                                     brew_steps, rating, review, notes, created_at"#,
+                           RETURNING *"#,
                         brew_hash,
                         brew.id
                     )

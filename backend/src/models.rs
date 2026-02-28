@@ -4,28 +4,61 @@ use sqlx::FromRow;
 
 use crate::utils::{celsius_to_fahrenheit, compute_ratio, format_brew_time};
 
+// ======= Users =======
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct User {
+    pub id: i32,
+    pub username: String,
+    pub display_name: Option<String>,
+    pub email: Option<String>,
+    #[serde(skip_serializing)]  // never expose the hash in API responses
+    pub password_hash: String,
+    pub is_admin: bool,
+    pub created_at: DateTime<Utc>,
+}
+
+// Registration input — plain-text password, hashed server-side before storage
+#[derive(Debug, Deserialize)]
+pub struct CreateUser {
+    pub username: String,
+    pub display_name: Option<String>,
+    pub email: Option<String>,
+    pub password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct UserToken {
+    pub id: i32,
+    pub user_id: i32,
+    #[serde(skip_serializing)]  // raw token is only ever held by the client
+    pub token_hash: String,
+    pub label: Option<String>,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+}
+
 // ======= Equipment =======
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
-pub struct Grinder { // Item in database
-    pub id: i32, // PK
+pub struct Grinder {
+    pub id: i32,
+    pub user_id: i32,
     pub name: String,
     pub notes: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
-// What the user inputs when creating a new grinder
-// created_at, id does not exist yet
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateGrinder {
     pub name: String,
     pub notes: Option<String>,
 }
 
-// (id and created_at are assigned by DB)
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Brewer {
     pub id: i32,
+    pub user_id: i32,
     pub name: String,
     pub brew_method: String,        // filter, espresso, other
     pub brew_type: Option<String>,  // v60, chemex, aeropress, automatic
@@ -52,6 +85,7 @@ pub struct CreateBrewer {
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct CoffeeBag {
     pub id: i32,
+    pub user_id: i32,
     pub bag_hash: Option<String>,
     pub roaster: Option<String>,
     pub roaster_origin_city: Option<String>,
@@ -95,6 +129,7 @@ pub struct CreateCoffeeBag {
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Brew {
     pub id: i32,
+    pub user_id: i32,
     pub brew_hash: Option<String>,
     pub coffee_bag_id: Option<i32>,
     pub brew_datetime: DateTime<Utc>,

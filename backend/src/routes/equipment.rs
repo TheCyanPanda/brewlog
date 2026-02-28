@@ -40,7 +40,7 @@ async fn create_grinder(
         Grinder,
         r#"INSERT INTO grinders (name, notes)
         VALUES ($1, $2)
-        RETURNING id, name, notes, created_at"#,
+        RETURNING *"#,
         body.name,
         body.notes
     )
@@ -67,7 +67,7 @@ async fn create_brewer(
         Brewer,
         r#"INSERT INTO brewers (name, brew_method, brew_type, brand, model, notes)
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, name, brew_method, brew_type, brand, model, notes, created_at
+        RETURNING *
         "#,
         body.name, body.brew_method, body.brew_type, body.brand, body.model, body.notes
     )

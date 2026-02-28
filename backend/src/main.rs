@@ -18,7 +18,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing_subscriber::registry() // Initialize logging
         .with(tracing_subscriber::EnvFilter::try_from_default_env()  // env var: RUST_LOG=debug
-            .unwrap_or_else(|_| "brewlog=debug,tower_http=info".into()))  // fallback if unset
+            .unwrap_or_else(|_| "coffeelog_backend=debug,tower_http=info".into()))  // fallback if unset
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -48,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
         .with_state(pool);  // Make available to handlers
 
     let addr: String = format!("{}:{}", host, port);
-    info!("Brewlog server listening on http://{}", addr);
+    info!("Coffeelog server listening on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, app).await?;

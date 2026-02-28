@@ -1,6 +1,6 @@
 # Terminate all active connections in postgres db
 psql postgres://brewlog:test123@localhost:3000/postgres -c \
-  "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'brewlog_db' AND pid <> pg_backend_pid();"
+  "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'coffeelog_db' AND pid <> pg_backend_pid();"
 
 # sqlx database drop
 # sqlx database setup
@@ -9,11 +9,11 @@ psql postgres://brewlog:test123@localhost:3000/postgres -c \
 # Create schema
 sqlx database setup
 
-# connect to db
-psql postgres://brewlog:test123@localhost:3000/brewlog_db
+# Connect to db
+psql postgres://brewlog:test123@localhost:3000/coffeelog_db
 
 # List all tables
-psql -h ~/pgdata -p 3000 -U brewlog -d brewlog_db -c "\dt"
+psql -h ~/pgdata -p 3000 -U brewlog -d coffeelog_db -c "\dt"
 
 # Insert a grinder
 curl -X POST http://localhost:3001/grinders \
@@ -24,11 +24,15 @@ curl -X POST http://localhost:3001/grinders \
 curl http://localhost:3001/grinders
 
 # Clear everything
-psql -h ~/pgdata -p 3000 -U brewlog -d brewlog_db -c "TRUNCATE grinders, brewers, coffee_bags, brews RESTART IDENTITY CASCADE;"
+psql -h ~/pgdata -p 3000 -U brewlog -d coffeelog_db -c "TRUNCATE users RESTART IDENTITY CASCADE;"
 
-# Or delete a specific row
-psql -h ~/pgdata -p 3000 -U brewlog -d brewlog_db -c "DELETE FROM grinders WHERE id = 1;"
+# delete a specific row
+psql -h ~/pgdata -p 3000 -U brewlog -d coffeelog_db -c "DELETE FROM grinders WHERE id = 1;"
 
-# Drop everything and re-migrate
-sqlx migrate revert
-sqlx migrate run
+# Full schema reset (when migration file has changed)
+psql postgres://brewlog:test123@localhost:3000/postgres -c \
+  "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'coffeelog_db' AND pid <> pg_backend_pid();"
+sqlx database drop && sqlx database create && sqlx migrate run
+
+# Run dev test (wipes old db + adds dummy data ands reads back)
+cargo test --test dbtest -- --nocapture

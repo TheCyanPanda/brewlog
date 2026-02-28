@@ -43,10 +43,7 @@ async fn create_bag(
        origin_country, origin_region, roast_level, variety, process,
        taste_notes, bean_type, harvest_date, roast_date, caffeine_free,
        batch_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-       RETURNING id, bag_hash, roaster, roaster_origin_city, roaster_origin_country,
-                 origin_country, origin_region, roast_level, variety, process,
-                 taste_notes, bean_type, harvest_date, roast_date, caffeine_free,
-                 batch_id, image_path, created_at"#,
+       RETURNING *"#,
     body.roaster,
     body.roaster_origin_city,
     body.roaster_origin_country,
@@ -70,10 +67,7 @@ async fn create_bag(
     let bag = sqlx::query_as!(
         CoffeeBag,
         r#"UPDATE coffee_bags SET bag_hash = $1 WHERE id = $2
-        RETURNING id, bag_hash, roaster, roaster_origin_city, roaster_origin_country,
-                  origin_country, origin_region, roast_level, variety, process,
-                  taste_notes, bean_type, harvest_date, roast_date, caffeine_free,
-                  batch_id, image_path, created_at"#,
+        RETURNING *"#,
         bag_hash,
         bag.id
     )
@@ -91,11 +85,7 @@ async fn get_bag(
 ) -> Result<Json<CoffeeBag>> {
     let bag: CoffeeBag = sqlx::query_as!(
         CoffeeBag,
-        r#"SELECT id, bag_hash, roaster, roaster_origin_city, roaster_origin_country,
-          origin_country, origin_region, roast_level, variety, process,
-          taste_notes, bean_type, harvest_date, roast_date, caffeine_free,
-          batch_id, image_path, created_at
-        FROM coffee_bags WHERE id = $1"#,
+        r#"SELECT * FROM coffee_bags WHERE id = $1"#,
         id
     )
     .fetch_optional(&pool)
@@ -120,10 +110,7 @@ async fn update_bag(
             harvest_date = $11, roast_date = $12,
             caffeine_free = $13, batch_id = $14
            WHERE id = $15
-           RETURNING id, bag_hash, roaster, roaster_origin_city, roaster_origin_country,
-                     origin_country, origin_region, variety, process, taste_notes,
-                     bean_type, roast_level, harvest_date, roast_date, caffeine_free,
-                     batch_id, image_path, created_at"#,
+           RETURNING *"#,
         body.roaster, body.roaster_origin_city, body.roaster_origin_country,
         body.origin_country, body.origin_region, body.variety, body.process,
         body.taste_notes.as_deref(), body.bean_type, body.roast_level,
