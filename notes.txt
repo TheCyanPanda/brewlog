@@ -36,3 +36,44 @@ sqlx database drop && sqlx database create && sqlx migrate run
 
 # Run dev test (wipes old db + adds dummy data ands reads back)
 cargo test --test dbtest -- --nocapture
+
+
+
+### Frontend planning
+
+mobile/lib/
+  main.dart              : app entry point, MaterialApp setup
+  models/
+    brew.dart            : Dart class mirroring the Brew JSON
+    coffee_bag.dart
+    equipment.dart       : Grinder + Brewer
+  services/
+    api_client.dart      : base HTTP client (auth header injection)
+    brew_service.dart    : list/create/delete brews
+    bag_service.dart     : list/create bags
+    equipment_service.dart
+  screens/
+    login_screen.dart    : first screen
+    home_screen.dart     : dashboard (last brews, streak)
+    brews_screen.dart    : scrollable brew list
+    brew_detail_screen.dart
+    add_brew_screen.dart : multi-step form
+    bags_screen.dart
+  widgets/
+    brew_card.dart       : reusable card for a brew in a list
+
+
+1: Build login
+2: Brewlist list
+3: Brew detail
+4: Add brew
+5: Coffee bags
+6: Dashboard
+
+Widgets — everything is a widget. StatelessWidget for static UI, StatefulWidget when the screen needs to react to changes (like loading data).
+
+async/await — very similar to Python's asyncio (use for all HTTP calls)
+
+set_state() - when we change data in StatefilWidget and want the UI the update (re-render): set_state(() {x = value})
+
+Navigation: Navigator.push(context, MateralPageRoute(builder: (_) => BrewDetailScreen(brew: brew))) - go to new screen
