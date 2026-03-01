@@ -1,3 +1,8 @@
+# Check if old pgsql server instance is running
+sudo ss -tlnp | grep 3000
+# Then kill it: (example output: LISTEN 0      244         127.0.0.1:3000      0.0.0.0:*    users:(("postgres",pid=370,fd=5)))
+sudo kill <pid>
+
 # Terminate all active connections in postgres db
 psql postgres://brewlog:test123@localhost:3000/postgres -c \
   "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'coffeelog_db' AND pid <> pg_backend_pid();"
