@@ -38,10 +38,11 @@ async fn main() -> anyhow::Result<()> {
     sqlx::migrate!("./migrations").run(&pool).await?; // Read SQL Schema
 
     let app: Router = Router::new() // register routers
-        .merge(routes::coffee_bags::router())
-        .merge(routes::brews::router())
-        .merge(routes::equipment::router())
-        .merge(routes::export::router())
+        .merge(routes::auth::router()) // POST auth/register|login|logout
+        .merge(routes::coffee_bags::router()) // /GET/POST/PUT/DELETE /bags
+        .merge(routes::brews::router())  // /GET/POST/DELETE /brews
+        .merge(routes::equipment::router()) // GET/POST /grinders and /brewers
+        .merge(routes::export::router()) // GET /export | /analytics
         .merge(routes::ha::router()) // Home assistant
         .layer(CorsLayer::permissive()) // Allow android app to connect
         .layer(TraceLayer::new_for_http())  // Log all requests

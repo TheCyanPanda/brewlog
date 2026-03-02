@@ -8,6 +8,7 @@ pub enum AppError {
     Database(sqlx::Error),  // DB errors
     NotFound(String),  // 404
     BadRequest(String),  // 400
+    Unauthorized, // 401
 }
 
 impl From<sqlx::Error> for AppError {
@@ -26,11 +27,17 @@ impl IntoResponse for AppError {
             }
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            AppError::Unauthorized => {
+                (StatusCode::UNAUTHORIZED, "Unauthorized".to_string())
+
+            }
         };
 
         (status, Json(json!({ "error": message }))).into_response()
     }
 }
+
+
 
 
 

@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = e.response?.statusCode == 401
           ? 'Incorrect username or password'
-          : 'Could not connect. Is the server running?';
+          : 'Could not connect. Is the server running? ($e)';
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);

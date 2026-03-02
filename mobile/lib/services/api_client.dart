@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Base URL of the backend. This points to our local machine. On Android emulator, 10.0.2.2 is the
 // alias for localhost (leading 'k' is for constant)
-const String kbaseUrl = 'http://10.0.2.2.3000';
+const String kbaseUrl = 'http://10.0.2.2:3001';
 
 // A single shared Dio instance for the whole App
 Dio createApiClient() {

@@ -3,3 +3,4 @@ pub mod brews;
 pub mod equipment;
 pub mod ha;
 pub mod export;
+pub mod auth;

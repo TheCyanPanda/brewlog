@@ -216,3 +216,18 @@ pub struct BrewFilter {
     pub offset: Option<i64>,
 }
 
+// ==== Auth
+
+#[derive(Debug, Deserialize)]
+pub struct LoginRequest {
+    pub username: String,
+    pub password: String,
+}
+
+// Returned by POST /auth/login
+#[derive(Debug, Serialize)]
+pub struct LoginResponse {
+    pub token: String,
+    pub user_id: i32,
+    pub username: String,
+}
