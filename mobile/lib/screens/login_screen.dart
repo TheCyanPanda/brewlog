@@ -1,17 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile/services/brew_service.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
   final Dio dio;
+  final BrewService brewService;
 
   const LoginScreen(
     {
       super.key,
       required this.authService,
       required this.dio,
+      required this.brewService,
     }
   );
 
@@ -59,7 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => HomeScreen(dio: widget.dio, authService: widget.authService)
+          builder: (_) => HomeScreen(
+            dio: widget.dio, authService: widget.authService, brewService: widget.brewService
+          )
         ),
       );
 
