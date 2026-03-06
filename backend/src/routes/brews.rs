@@ -10,6 +10,7 @@ use crate::{
     hash::{make_brew_hash, next_brew_number},
     models::{Brew, BrewFilter, BrewResponse, CreateBrew},
 };
+use crate::auth::AuthUser;
 
 pub fn router() -> Router<PgPool> {
     Router::new()
@@ -20,38 +21,42 @@ pub fn router() -> Router<PgPool> {
 // /GET /brews
 async fn list_brews(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Query(filter): Query<BrewFilter>,
 ) -> Result<Json<Vec<BrewResponse>>> {
-    let limit: i64 = filter.limit.unwrap_or(20).min(100);
+    let limit: i64 = filter.limit.unwrap_or(20).min(100); // LIMIT pgsql clause
     let offset: i64 = filter.offset.unwrap_or(0);
+
+    // TODO: Avoid copied 'order_by' etc in each query: Make a parameterized function for
+    // fetching data (table_name, user_id, order_by, etc are parameters to the fn) - fetch_rows
 
     let brews: Vec<Brew> = match (filter.rating, filter.coffee_bag_id) {
         (Some(rating), Some(bag_id)) => sqlx::query_as!(
             Brew,
-            r#"SELECT * FROM brews WHERE rating = $1 AND coffee_bag_id = $2
-               ORDER BY brew_datetime DESC LIMIT $3 OFFSET $4"#,
-            rating, bag_id, limit, offset
+            r#"SELECT * FROM brews WHERE rating = $2 AND coffee_bag_id = $3 AND user_id = $1
+               ORDER BY brew_datetime DESC LIMIT $4 OFFSET $5"#,
+            auth.user_id, rating, bag_id, limit, offset
         ).fetch_all(&pool).await?,
 
         (Some(rating), None) => sqlx::query_as!(
             Brew,
-            r#"SELECT * FROM brews WHERE rating = $1
-               ORDER BY brew_datetime DESC LIMIT $2 OFFSET $3"#,
-            rating, limit, offset
+            r#"SELECT * FROM brews WHERE rating = $2 AND user_id = $1
+               ORDER BY brew_datetime DESC LIMIT $3 OFFSET $4"#,
+            auth.user_id, rating, limit, offset
         ).fetch_all(&pool).await?,
 
         (None, Some(bag_id)) => sqlx::query_as!(
             Brew,
-            r#"SELECT * FROM brews WHERE coffee_bag_id = $1
-               ORDER BY brew_datetime DESC LIMIT $2 OFFSET $3"#,
-            bag_id, limit, offset
+            r#"SELECT * FROM brews WHERE coffee_bag_id = $2 AND user_id = $1
+               ORDER BY brew_datetime DESC LIMIT $3 OFFSET $4"#,
+            auth.user_id, bag_id, limit, offset
         ).fetch_all(&pool).await?,
 
         (None, None) => sqlx::query_as!(
             Brew,
-            r#"SELECT * FROM brews
-               ORDER BY brew_datetime DESC LIMIT $1 OFFSET $2"#,
-            limit, offset
+            r#"SELECT * FROM brews WHERE user_id = $1
+               ORDER BY brew_datetime DESC LIMIT $2 OFFSET $3"#,
+            auth.user_id, limit, offset
         ).fetch_all(&pool).await?,
     };
 
@@ -62,12 +67,13 @@ async fn list_brews(
 
 async fn get_brew(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Path(id): Path<i32>,
 ) -> Result<Json<BrewResponse>> {
     let brew: Brew = sqlx::query_as!(
         Brew,
-        r#"SELECT * FROM brews WHERE id = $1"#,
-        id
+        r#"SELECT * FROM brews WHERE id = $2 AND user_id = $1"#,
+        auth.user_id, id
     )
     .fetch_optional(&pool)
     .await?
@@ -79,6 +85,7 @@ async fn get_brew(
 
 async fn create_brew(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Json(body): Json<CreateBrew>,
 ) -> Result<Json<BrewResponse>> {
     let brew_datetime = body.brew_datetime.unwrap_or_else(chrono::Utc::now);
@@ -86,11 +93,12 @@ async fn create_brew(
     let brew: Brew = sqlx::query_as!(
         Brew,
         r#"INSERT INTO brews
-            (coffee_bag_id, brew_datetime, grinder_id, grind_setting,
+            (user_id, coffee_bag_id, brew_datetime, grinder_id, grind_setting,
              brewer_id, filter_paper, coffee_grams, water_grams,
              water_temp_c, brew_time_secs, brew_steps, rating, review, notes)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
            RETURNING *"#,
+        auth.user_id,
         body.coffee_bag_id,
         brew_datetime,
         body.grinder_id,
@@ -147,11 +155,12 @@ async fn create_brew(
 
 async fn delete_brew(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Path(id): Path<i32>,
 ) -> Result<Json<serde_json::Value>> {
     let result: sqlx::postgres::PgQueryResult = sqlx::query!(
-        "DELETE FROM brews WHERE id = $1",
-        id
+        "DELETE FROM brews WHERE id = $2 AND user_id = $1",
+        auth.user_id, id
     )
     .execute(&pool)
     .await?;

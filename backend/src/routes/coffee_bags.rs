@@ -10,6 +10,7 @@ use crate::{
     hash::make_bag_hash,
     models::{CoffeeBag,CreateCoffeeBag},
 };
+use crate::auth::AuthUser;
 
 pub fn router() -> Router<PgPool> {
     Router::new()
@@ -19,10 +20,16 @@ pub fn router() -> Router<PgPool> {
 
 
 // GET /bags
-async fn list_bags(State(pool): State<PgPool>) -> Result<Json<Vec<CoffeeBag>>> {
+async fn list_bags(
+    State(pool): State<PgPool>,
+    auth: AuthUser,
+) -> Result<Json<Vec<CoffeeBag>>> {
     let bags = sqlx::query_as!(
         CoffeeBag,
-        r#"SELECT * FROM coffee_bags ORDER BY created_at DESC"#
+        r#"SELECT * FROM coffee_bags
+        WHERE user_id = $1
+        ORDER BY created_at DESC"#,
+        auth.user_id
     )
     .fetch_all(&pool)
     .await?;
@@ -34,16 +41,18 @@ async fn list_bags(State(pool): State<PgPool>) -> Result<Json<Vec<CoffeeBag>>> {
 // POST /bags
 async fn create_bag(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Json(body): Json<CreateCoffeeBag>,
 ) -> Result<Json<CoffeeBag>> {
     let bag = sqlx::query_as!(
     CoffeeBag,
     r#"INSERT INTO coffee_bags
-       (roaster, roaster_origin_city, roaster_origin_country,
+       (user_id, roaster, roaster_origin_city, roaster_origin_country,
        origin_country, origin_region, roast_level, variety, process,
        taste_notes, bean_type, harvest_date, roast_date, caffeine_free,
-       batch_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+       batch_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *"#,
+    auth.user_id,
     body.roaster,
     body.roaster_origin_city,
     body.roaster_origin_country,
@@ -66,8 +75,9 @@ async fn create_bag(
     let bag_hash = make_bag_hash(body.roaster.as_deref(), bag.id);
     let bag = sqlx::query_as!(
         CoffeeBag,
-        r#"UPDATE coffee_bags SET bag_hash = $1 WHERE id = $2
+        r#"UPDATE coffee_bags SET bag_hash = $2 WHERE id = $3 AND user_id = $1
         RETURNING *"#,
+        auth.user_id,
         bag_hash,
         bag.id
     )
@@ -81,12 +91,13 @@ async fn create_bag(
 // /GET bags:id
 async fn get_bag(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Path(id): Path<i32>
 ) -> Result<Json<CoffeeBag>> {
     let bag: CoffeeBag = sqlx::query_as!(
         CoffeeBag,
-        r#"SELECT * FROM coffee_bags WHERE id = $1"#,
-        id
+        r#"SELECT * FROM coffee_bags WHERE id = $2 AND user_id = $1"#,
+        auth.user_id, id,
     )
     .fetch_optional(&pool)
     .await?
@@ -96,21 +107,24 @@ async fn get_bag(
 
 }
 
+// PUT bags:id
 async fn update_bag(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Path(id): Path<i32>,
     Json(body): Json<CreateCoffeeBag>,
 ) -> Result<Json<CoffeeBag>> {
     let bag: CoffeeBag = sqlx::query_as!(
         CoffeeBag,
         r#"UPDATE coffee_bags SET
-            roaster = $1, roaster_origin_city = $2, roaster_origin_country = $3,
-            origin_country = $4, origin_region = $5, variety = $6, process = $7,
-            taste_notes = $8, bean_type = $9, roast_level = $10,
-            harvest_date = $11, roast_date = $12,
-            caffeine_free = $13, batch_id = $14
-           WHERE id = $15
+            roaster = $2, roaster_origin_city = $3, roaster_origin_country = $4,
+            origin_country = $5, origin_region = $6, variety = $7, process = $8,
+            taste_notes = $9, bean_type = $10, roast_level = $11,
+            harvest_date = $12, roast_date = $13,
+            caffeine_free = $14, batch_id = $15
+           WHERE id = $16 AND user_id = $1
            RETURNING *"#,
+        auth.user_id,
         body.roaster, body.roaster_origin_city, body.roaster_origin_country,
         body.origin_country, body.origin_region, body.variety, body.process,
         body.taste_notes.as_deref(), body.bean_type, body.roast_level,
@@ -127,11 +141,12 @@ async fn update_bag(
 
 async fn delete_bag(
     State(pool): State<PgPool>,
+    auth: AuthUser,
     Path(id): Path<i32>,
 ) -> Result<Json<serde_json::Value>> {
     let result: sqlx::postgres::PgQueryResult = sqlx::query!(
-        "DELETE FROM coffee_bags WHERE id = $1",
-        id
+        "DELETE FROM coffee_bags WHERE id = $2 AND user_id = $1",
+        auth.user_id, id
     )
     .execute(&pool)
     .await?;

@@ -4,6 +4,7 @@ mod error;
 mod hash;
 mod routes;
 mod utils;
+mod auth;
 
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
