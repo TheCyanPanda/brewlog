@@ -33,7 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage; // null = no error
 
-  // dispose() is always called when this widged is not int the tree. Apways dispose to free memory!
+  // dispose() is always called when this widget is not int the tree.
+  // Always dispose to free memory!
   @override
   void dispose() {
     _usernameController.dispose();

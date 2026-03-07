@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -5,8 +6,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 // alias for localhost (leading 'k' is for constant)
 const String kbaseUrl = 'http://10.0.2.2:3001';
 
+// Called by the interceptor when a 401 (Unauthorized error) is received.
+// Navigates to login (e.g expired/invalid token)
+typedef OnUnauthorizedCallback = void Function();
+
 // A single shared Dio instance for the whole App
-Dio createApiClient() {
+// Args:
+// onUnauthorized: callback function on 401 errors
+Dio createApiClient({OnUnauthorizedCallback? onUnauthorized}) {
   // Options for our dio API client
   final BaseOptions options = BaseOptions(
     baseUrl: kbaseUrl,
@@ -19,6 +26,7 @@ Dio createApiClient() {
   );
 
   final Dio dio = Dio(options);
+  dio.interceptors.add(AuthInterceptor(onUnauthorized: onUnauthorized));
   return dio;
 }
 
@@ -26,6 +34,9 @@ Dio createApiClient() {
 // It attaches the bearer token to outgoing requests and catches 401 resoness and clears the token
 // (if backend rejected it)
 class AuthInterceptor extends Interceptor {
+  final OnUnauthorizedCallback? onUnauthorized;
+  AuthInterceptor({this.onUnauthorized}); // 401
+
   // Called before every requrest is sent
   @override
   Future<void> onRequest(
@@ -56,6 +67,7 @@ class AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
+      onUnauthorized?.call(); // Triggers navigation
     }
 
     handler.next(err);

@@ -6,19 +6,39 @@ import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/brew_service.dart';
 
-void main() {
-  final Dio dio = createApiClient();
-  final AuthService authService = AuthService(dio);
-  final BrewService brewService = BrewService(dio);
+// Global navigation key - lets the auth interceptor trigger navigation without
+// needing build context
+final navigatorKey = GlobalKey<NavigatorState>();
 
-  // runApp - inflates the widget and attaches it to the screen. const = built at compile time
-  runApp(
-    CoffeeLogApp(
-      dio: dio,
-      authService: authService,
-      brewService: brewService,
-    )
+void main() {
+  // late allows forward references in the closure below.
+  // By the time onUnauthorized fires (during a 401 response),
+  // dio and authService are long since initialised.
+  late final Dio dio;
+  late final AuthService authService;
+  late final BrewService brewService;
+
+  dio = createApiClient(
+    onUnauthorized: () {
+      // This function defined the 'OnUnauthorizedCallback':
+      // Clear the entire back stack and send the user to login
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => LoginScreen(dio: dio, brewService: brewService, authService: authService),
+        ),
+        (_) => false,
+      );
+    },
   );
+
+  authService = AuthService(dio);
+  brewService = BrewService(dio);
+
+  runApp(CoffeeLogApp(
+    dio: dio,
+    authService: authService,
+    brewService: brewService,
+  ));
 }
 
 class CoffeeLogApp extends StatelessWidget {
@@ -40,6 +60,7 @@ class CoffeeLogApp extends StatelessWidget {
   // build() is called by the framework whenever this widget needs to render - always returns a Widget.
   return MaterialApp( // Top level widget that sets up naivation, theming etc
       title: 'CoffeeLog',
+      navigatorKey: navigatorKey,
       // hide the red "DEBUG" banner in the corner
       debugShowCheckedModeBanner: false,
 
