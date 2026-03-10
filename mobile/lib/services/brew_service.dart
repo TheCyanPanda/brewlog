@@ -25,6 +25,41 @@ class BrewService {
         .map(Brew.fromJson)
         .toList();
   }
-}
 
-//TODO : Auto update brews to screen
+  // POST /brews — all fields optional; pass only what the user filled in.
+  Future<Brew> createBrew({
+    int? coffeeBagId,
+    int? brewerId,
+    int? grinderId,
+    String? grindSetting,
+    String? filterPaper,
+    double? coffeeGrams,
+    double? waterGrams,
+    double? waterTempC,
+    int? brewTimeSecs,   // caller converts MM:SS → seconds
+    String? rating,
+    String? review,
+    String? notes,
+  }) async {
+    final Response<Map<String, dynamic>> response =
+        await _dio.post<Map<String, dynamic>>(
+      '/brews',
+      // Null values are omitted by Dio so the backend uses its own defaults.
+      data: <String, dynamic>{
+        'coffee_bag_id': coffeeBagId,
+        'brewer_id': brewerId,
+        'grinder_id': grinderId,
+        'grind_setting': grindSetting,
+        'filter_paper': filterPaper,
+        'coffee_grams': coffeeGrams,
+        'water_grams': waterGrams,
+        'water_temp_c': waterTempC,
+        'brew_time_secs': brewTimeSecs,
+        'rating': rating,
+        'review': review,
+        'notes': notes,
+      },
+    );
+    return Brew.fromJson(response.data!);
+  }
+}

@@ -1,40 +1,26 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/services/brew_service.dart';
-import '../services/auth_service.dart';
+import '../services/app_services.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  final AuthService authService;
-  final Dio dio;
-  final BrewService brewService;
+  final AppServices services;
 
-  const LoginScreen(
-    {
-      super.key,
-      required this.authService,
-      required this.dio,
-      required this.brewService,
-    }
-  );
+  const LoginScreen({super.key, required this.services});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
-
 }
 
-
-// The Stateful class
 class _LoginScreenState extends State<LoginScreen> {
-  // Text edit controls. Current value is read by controller.text
+  // Text edit controls — current value read via controller.text.
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  String? _errorMessage; // null = no error
+  String? _errorMessage; // null = no error to show
 
-  // dispose() is always called when this widget is not int the tree.
-  // Always dispose to free memory!
+  // Always dispose controllers to free memory.
   @override
   void dispose() {
     _usernameController.dispose();
@@ -43,38 +29,32 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    setState(()
-      {
-        _isLoading = true;
-        _errorMessage = null;
-      }
-    );
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
-      await widget.authService.login( // Fill with text from login form
+      await widget.services.auth.login(
         _usernameController.text.trim(),
         _passwordController.text,
       );
 
-      // Check is widget is still in tree (user may have navigated away)
+      // Guard against the widget being removed mid-await.
       if (!mounted) return;
 
-      //Remove LoginScreen fromthe stack (back button wont return to login screen)
+      // Replace login screen so the back button won't return to it.
       Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => HomeScreen(
-            dio: widget.dio, authService: widget.authService, brewService: widget.brewService
-          )
+          builder: (_) => HomeScreen(services: widget.services),
         ),
       );
-
-    } on DioException catch(e) {
-      // Catch dio network/response errors
+    } on DioException catch (e) {
       setState(() {
         _errorMessage = e.response?.statusCode == 401
-          ? 'Incorrect username or password'
-          : 'Could not connect. Is the server running? ($e)';
+            ? 'Incorrect username or password'
+            : 'Could not connect. Is the server running? ($e)';
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -123,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onSubmitted: (_) => _login(), // pressing "done" triggers login
               ),
 
-              // Conditionally show error — only renders if _errorMessage != null
+              // Only rendered when there is an error to show.
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
@@ -137,8 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 24.0),
 
-              // FilledButton is the Material 3 primary action button.
-              // Setting onPressed to null automatically disables + greys it out.
+              // Setting onPressed to null automatically disables + greys out the button.
               FilledButton(
                 onPressed: _isLoading ? null : _login,
                 child: _isLoading
@@ -155,5 +134,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
 }

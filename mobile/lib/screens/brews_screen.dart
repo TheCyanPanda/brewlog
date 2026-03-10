@@ -2,13 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../models/brew.dart';
-import '../services/brew_service.dart';
+import '../services/app_services.dart';
 import '../widgets/brew_card.dart';
+import 'add_brew_screen.dart';
 
 class BrewsScreen extends StatefulWidget {
-  final BrewService brewService;
+  final AppServices services;
 
-  const BrewsScreen({super.key, required this.brewService});
+  const BrewsScreen({super.key, required this.services});
 
   @override
   State<BrewsScreen> createState() => _BrewsScreenState();
@@ -22,7 +23,6 @@ class _BrewsScreenState extends State<BrewsScreen> {
   @override
   void initState() {
     super.initState();
-    // Kick off the fetch as soon as the screen is inserted into the tree.
     _loadBrews();
   }
 
@@ -33,7 +33,7 @@ class _BrewsScreenState extends State<BrewsScreen> {
     });
 
     try {
-      final List<Brew> brews = await widget.brewService.listBrews();
+      final List<Brew> brews = await widget.services.brews.listBrews();
       if (mounted) {
         setState(() {
           _brews = brews;
@@ -50,11 +50,27 @@ class _BrewsScreenState extends State<BrewsScreen> {
     }
   }
 
+  Future<void> _openAddBrew() async {
+    // Wait for AddBrewScreen to close, then refresh regardless of outcome.
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => AddBrewScreen(services: widget.services),
+      ),
+    );
+    _loadBrews();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Brews')),
       body: _buildBody(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openAddBrew,
+        tooltip: 'Log a brew',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -70,7 +86,6 @@ class _BrewsScreenState extends State<BrewsScreen> {
           children: <Widget>[
             Text(_error!, textAlign: TextAlign.center),
             const SizedBox(height: 16.0),
-            // Pull-to-retry button
             FilledButton(
               onPressed: _loadBrews,
               child: const Text('Retry'),
@@ -84,7 +99,7 @@ class _BrewsScreenState extends State<BrewsScreen> {
       return const Center(child: Text('No brews yet. Start brewing! ☕'));
     }
 
-    // RefreshIndicator adds pull-to-refresh on the list
+    // RefreshIndicator adds pull-to-refresh on the list.
     return RefreshIndicator(
       onRefresh: _loadBrews,
       child: ListView.builder(
@@ -96,4 +111,3 @@ class _BrewsScreenState extends State<BrewsScreen> {
     );
   }
 }
-

@@ -1,45 +1,29 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../services/brew_service.dart';
+import '../services/app_services.dart';
 import 'bags_screen.dart';
 import 'brews_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final AuthService authService;
-  final Dio dio;
-  final BrewService brewService;
+  final AppServices services;
 
-  const HomeScreen(
-    {
-      super.key,
-      required this.authService,
-      required this.dio,
-      required this.brewService,
-    }
-  );
-
+  const HomeScreen({super.key, required this.services});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
-
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // Each tab is its own widget
+  // Each tab is its own widget — built once and kept alive by IndexedStack.
   late final List<Widget> _tabs;
 
   @override
   void initState() {
     super.initState();
     _tabs = <Widget>[
-      // Dashboard
-      const Center(child: Text('Dashboard - coming soon')), // TODO: Fix placeholder
-      // Brews list
-      BrewsScreen(brewService: widget.brewService),
-      // Bags
+      const Center(child: Text('Dashboard — coming soon')), // TODO: dashboard
+      BrewsScreen(services: widget.services),
       BagsScreen(),
     ];
   }
@@ -47,7 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack( // Keeps tabs visible during scrolling + no reload on tab switching
+      // IndexedStack keeps all tabs mounted so they don't reload on switch.
+      body: IndexedStack(
         index: _selectedIndex,
         children: _tabs,
       ),
@@ -76,5 +61,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 }

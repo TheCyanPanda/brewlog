@@ -1,123 +1,86 @@
-import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/api_client.dart';
-import 'services/auth_service.dart';
-import 'services/brew_service.dart';
+import 'services/app_services.dart';
 
-// Global navigation key - lets the auth interceptor trigger navigation without
-// needing build context
-final navigatorKey = GlobalKey<NavigatorState>();
+// Global navigation key — lets the auth interceptor navigate to login
+// without needing a BuildContext.
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  // late allows forward references in the closure below.
-  // By the time onUnauthorized fires (during a 401 response),
-  // dio and authService are long since initialised.
-  late final Dio dio;
-  late final AuthService authService;
-  late final BrewService brewService;
+  // `late` allows the onUnauthorized closure to capture `services` before
+  // it's assigned — by the time a 401 fires, the assignment is long done.
+  late final AppServices services;
 
-  dio = createApiClient(
+  final Dio dio = createApiClient(
     onUnauthorized: () {
-      // This function defined the 'OnUnauthorizedCallback':
-      // Clear the entire back stack and send the user to login
+      // Clear the entire back stack and send the user to login.
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute<void>(
-          builder: (_) => LoginScreen(dio: dio, brewService: brewService, authService: authService),
+          builder: (_) => LoginScreen(services: services),
         ),
         (_) => false,
       );
     },
   );
 
-  authService = AuthService(dio);
-  brewService = BrewService(dio);
+  services = AppServices.fromDio(dio);
 
-  runApp(CoffeeLogApp(
-    dio: dio,
-    authService: authService,
-    brewService: brewService,
-  ));
+  runApp(CoffeeLogApp(services: services));
 }
 
 class CoffeeLogApp extends StatelessWidget {
-  final Dio dio;
-  final AuthService authService;
-  final BrewService brewService;
+  final AppServices services;
 
-  const CoffeeLogApp(
-    {
-      super.key,
-      required this.dio,
-      required this.authService,
-      required this.brewService,
-    }
-  ); // Pass identity key to parent class
+  const CoffeeLogApp({super.key, required this.services});
 
   @override
   Widget build(BuildContext context) {
-  // build() is called by the framework whenever this widget needs to render - always returns a Widget.
-  return MaterialApp( // Top level widget that sets up naivation, theming etc
+    return MaterialApp(
       title: 'CoffeeLog',
       navigatorKey: navigatorKey,
-      // hide the red "DEBUG" banner in the corner
       debugShowCheckedModeBanner: false,
-
-      // Color Schema in app
       theme: ThemeData(
-        //fromSeed generates a full color pallete from a seed color
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6F4E37), // Brown
-          brightness: Brightness.dark // Dark mode
+          seedColor: const Color(0xFF6F4E37), // coffee brown
+          brightness: Brightness.dark,
         ),
-        useMaterial3: true
+        useMaterial3: true,
       ),
-
-      // home is the first screen shown on app launch
-      home: StartupRouter(dio: dio, authService: authService, brewService: brewService)
+      home: StartupRouter(services: services),
     );
   }
 }
 
-// Shown on launch, checks local storage for a saved login token and route to screen
+/// Shown on launch. Checks local storage for a saved token and routes
+/// to [HomeScreen] or [LoginScreen] accordingly.
 class StartupRouter extends StatelessWidget {
-  final Dio dio;
-  final AuthService authService;
-  final BrewService brewService;
+  final AppServices services;
 
-  const StartupRouter(
-    {
-      super.key,
-      required this.dio,
-      required this.authService,
-      required this.brewService,
-    }
-  );
+  const StartupRouter({super.key, required this.services});
 
   @override
   Widget build(BuildContext context) {
-    // Rebuilds when an async Future completes. <bool> is the return type of 'isLoggedIn'
-    return FutureBuilder<bool> (
-      future: authService.isLoggedIn(),
-        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-          // ConnectionState.waiting = Future has not resolved yet
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-        // TODO: Consider pulling brewService, authService etc into a collection class
-        // so that we don't have to make them separate parameters (serviceCollection?)
-
-        // Token found in local storage: Go straight home
-        if (snapshot.data == true) {
-          return HomeScreen(dio: dio, authService: authService, brewService: brewService);
+    // FutureBuilder rebuilds when the async check completes.
+    return FutureBuilder<bool>(
+      future: services.auth.isLoggedIn(),
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+        // Still waiting for SharedPreferences to respond.
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
-        // No token: User must log in
-        return LoginScreen(dio: dio, authService: authService, brewService: brewService);
+        // Token found — go straight home.
+        if (snapshot.data == true) {
+          return HomeScreen(services: services);
+        }
+
+        // No token — user must log in.
+        return LoginScreen(services: services);
       },
     );
   }
