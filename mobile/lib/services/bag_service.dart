@@ -20,22 +20,43 @@ class BagService {
   /* TODO: Add option to make originCountry take multuple counties  (everyone
   does not only drink single origin, hey!) */
   /* TODO: Add option to add image of bag */
-/*  Future<CoffeeBag> createBag({
-    String roaster,
+  Future<CoffeeBag> createBag({
+    required String roaster,
     String? roasterOriginCity,
     String? roasterOriginCountry,
     String? originCountry,
     String? originRegion,
-    String roastLevel, // TODO: Make this selectable so that we can easily filter later on
+    String? roastLevel, // TODO: Make this selectable so that we can easily filter later on
     String? variety,
+    String? process,
+    List<String>? tasteNotes,
+    String? beanType,
+    DateTime? harvestDate,
+    DateTime? roastDate,
+    bool caffeineFree = false,
+    String? batchId,
+
   }) async {
     final Response<Map<String, dynamic>> response =
         await _dio.post<Map<String, dynamic>>(
           '/bags',
           data: <String, dynamic>{
             'roaster': roaster,
+            'roaster_origin_city': ?roasterOriginCity,
+            'roaster_origin_country': ?roasterOriginCountry,
+            'origin_country': ?originCountry,
+            'origin_region': ?originRegion,
+            'roast_level': ?roastLevel,
+            'variety': ?variety,
+            'process': ?process,
+            'taste_notes': ?tasteNotes,
+            'bean_type': ?beanType,
+            'harvest_date': ?harvestDate?.toIso8601String(),
+            'roast_date': ?roastDate?.toIso8601String(),
+            'caffeine_free': caffeineFree,
+            'batch_id': ?batchId,
           },
         );
     return CoffeeBag.fromJson(response.data!);
-  }*/
+  }
 }
