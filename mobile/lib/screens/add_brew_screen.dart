@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import '../models/coffee_bag.dart';
 import '../models/equipment.dart';
 import '../services/app_services.dart';
+import '../utils/string_utils.dart';
+import '../widgets/add_bag_sheet.dart';
 
 // Sentinel value — signals "open add-new form" rather than a real selection.
 const String _kAddNew = '__add_new__';
 
 // File-level helper so all sheet widgets can use it without duplication.
-String? _blankToNull(String s) => s.trim().isEmpty ? null : s.trim();
 
 class AddBrewScreen extends StatefulWidget {
   final AppServices services;
@@ -123,7 +124,7 @@ class _AddBrewScreenState extends State<AddBrewScreen> {
     final CoffeeBag? newBag = await showModalBottomSheet<CoffeeBag>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _AddBagSheet(services: widget.services),
+      builder: (_) => AddBagSheet(services: widget.services),
     );
     if (newBag != null && mounted) {
       setState(() {
@@ -172,15 +173,15 @@ class _AddBrewScreenState extends State<AddBrewScreen> {
         coffeeBagId: _selectedBag?.id,
         brewerId: _selectedBrewer?.id,
         grinderId: _selectedGrinder?.id,
-        grindSetting: _blankToNull(_grindSettingController.text),
-        filterPaper: _blankToNull(_filterPaperController.text),
+        grindSetting: blankToNull(_grindSettingController.text),
+        filterPaper: blankToNull(_filterPaperController.text),
         coffeeGrams: double.tryParse(_coffeeGramsController.text.trim()),
         waterGrams: double.tryParse(_waterGramsController.text.trim()),
         waterTempC: double.tryParse(_waterTempController.text.trim()),
         brewTimeSecs: _parseBrewTime(_brewTimeController.text),
         rating: _selectedRating,
-        review: _blankToNull(_reviewController.text),
-        notes: _blankToNull(_notesController.text),
+        review: blankToNull(_reviewController.text),
+        notes: blankToNull(_notesController.text),
       );
       if (mounted) Navigator.pop(context);
     } on DioException catch (e) {
@@ -490,128 +491,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── Bottom sheet: Add a new coffee bag ────────────────────────────────────────
-
-class _AddBagSheet extends StatefulWidget {
-  final AppServices services;
-  const _AddBagSheet({required this.services});
-
-  @override
-  State<_AddBagSheet> createState() => _AddBagSheetState();
-}
-
-class _AddBagSheetState extends State<_AddBagSheet> {
-  final TextEditingController _roasterController = TextEditingController();
-  final TextEditingController _countryController = TextEditingController();
-  final TextEditingController _regionController = TextEditingController();
-  final TextEditingController _varietyController = TextEditingController();
-  String? _roastLevel;
-  bool _isSaving = false;
-
-  static const List<String> _roastLevels = <String>[
-    'light', 'medium-light', 'medium', 'medium-dark', 'dark',
-  ];
-
-  @override
-  void dispose() {
-    _roasterController.dispose();
-    _countryController.dispose();
-    _regionController.dispose();
-    _varietyController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final String roaster = _roasterController.text.trim();
-    if (roaster.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Roaster is required')),
-      );
-      return;
-    }
-    setState(() => _isSaving = true);
-    try {
-      final CoffeeBag bag = await widget.services.bags.createBag(
-        roaster: roaster,
-        originCountry: _blankToNull(_countryController.text),
-        originRegion: _blankToNull(_regionController.text),
-        variety: _blankToNull(_varietyController.text),
-        roastLevel: _roastLevel,
-      );
-      if (mounted) Navigator.pop(context, bag);
-    } on DioException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${e.message}')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      // viewInsets.bottom = keyboard height — keeps fields above the keyboard.
-      padding: EdgeInsets.only(
-        left: 16.0,
-        right: 16.0,
-        top: 16.0,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Text('New Coffee Bag', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 16.0),
-          TextField(
-            controller: _roasterController,
-            decoration: const InputDecoration(labelText: 'Roaster *', border: OutlineInputBorder()),
-            autofocus: true,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12.0),
-          TextField(
-            controller: _countryController,
-            decoration: const InputDecoration(labelText: 'Country', border: OutlineInputBorder()),
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12.0),
-          TextField(
-            controller: _regionController,
-            decoration: const InputDecoration(labelText: 'Region', border: OutlineInputBorder()),
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12.0),
-          TextField(
-            controller: _varietyController,
-            decoration: const InputDecoration(labelText: 'Variety', border: OutlineInputBorder()),
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12.0),
-          DropdownButtonFormField<String>(
-            initialValue: _roastLevel,
-            decoration: const InputDecoration(labelText: 'Roast level', border: OutlineInputBorder()),
-            items: _roastLevels
-                .map((String l) => DropdownMenuItem<String>(value: l, child: Text(l)))
-                .toList(),
-            onChanged: (String? l) => setState(() => _roastLevel = l),
-          ),
-          const SizedBox(height: 16.0),
-          FilledButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? const SizedBox(width: 16.0, height: 16.0, child: CircularProgressIndicator(strokeWidth: 2.0))
-                : const Text('Add Bag'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+// TODO: Move AddBrewerScreen and Grrinder to their own files
 // ── Bottom sheet: Add a new brewer ────────────────────────────────────────────
 
 class _AddBrewerSheet extends StatefulWidget {
@@ -658,7 +538,7 @@ class _AddBrewerSheetState extends State<_AddBrewerSheet> {
       final Brewer brewer = await widget.services.equipment.createBrewer(
         name: name,
         brewMethod: _brewMethod!,
-        brewType: _blankToNull(_brewTypeController.text),
+        brewType: blankToNull(_brewTypeController.text),
       );
       if (mounted) Navigator.pop(context, brewer);
     } on DioException catch (e) {
@@ -758,7 +638,7 @@ class _AddGrinderSheetState extends State<_AddGrinderSheet> {
     try {
       final Grinder grinder = await widget.services.equipment.createGrinder(
         name,
-        notes: _blankToNull(_notesController.text),
+        notes: blankToNull(_notesController.text),
       );
       if (mounted) Navigator.pop(context, grinder);
     } on DioException catch (e) {

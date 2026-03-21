@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/brew.dart';
 
 class BrewCard extends StatelessWidget {
@@ -24,7 +23,7 @@ class BrewCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(
-                  brew.brewHash ?? 'Brew #${brew.id}',
+                  brew.brewHash ?? 'Brew #${brew.id}', // If hash is missing, default to Brew#XX
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -63,6 +62,8 @@ class BrewCard extends StatelessWidget {
     );
   }
 
+
+  // TODO: Refactor this out to a "utils" module
   // Simple date format: "2 Mar 2026"
   String _formatDate(DateTime dt) {
     const List<String> months = <String>[

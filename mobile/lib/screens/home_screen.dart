@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _tabs = <Widget>[
       const Center(child: Text('Dashboard — coming soon')), // TODO: dashboard
       BrewsScreen(services: widget.services),
-      BagsScreen(),
+      BagsScreen(services: widget.services),
     ];
   }
 

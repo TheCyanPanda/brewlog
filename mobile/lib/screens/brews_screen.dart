@@ -16,9 +16,9 @@ class BrewsScreen extends StatefulWidget {
 }
 
 class _BrewsScreenState extends State<BrewsScreen> {
-  List<Brew>? _brews;  // null = not yet loaded
+  List<Brew>? _brews;  // List of brews. null = not yet loaded
   String? _error;
-  bool _isLoading = true;
+  bool _isLoading = true;  // If brews are waiting to be loaded
 
   @override
   void initState() {
@@ -32,6 +32,7 @@ class _BrewsScreenState extends State<BrewsScreen> {
       _error = null;
     });
 
+    // GET /brews and assign _brews to the result
     try {
       final List<Brew> brews = await widget.services.brews.listBrews();
       if (mounted) {
@@ -40,7 +41,7 @@ class _BrewsScreenState extends State<BrewsScreen> {
           _isLoading = false;
         });
       }
-    } on DioException catch (_) {
+    } on DioException catch (_) { // TODO: Should we really catch all ?
       if (mounted) {
         setState(() {
           _error = 'Could not load brews. Is the server running?';
@@ -50,6 +51,7 @@ class _BrewsScreenState extends State<BrewsScreen> {
     }
   }
 
+  // '+ Add brew'
   Future<void> _openAddBrew() async {
     // Wait for AddBrewScreen to close, then refresh regardless of outcome.
     await Navigator.push<void>(
