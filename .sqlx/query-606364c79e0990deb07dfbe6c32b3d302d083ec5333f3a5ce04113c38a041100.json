@@ -37,6 +37,16 @@
         "ordinal": 6,
         "name": "created_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "roaster_name",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -51,7 +61,9 @@
       true,
       false,
       false,
-      false
+      false,
+      false,
+      true
     ]
   },
   "hash": "606364c79e0990deb07dfbe6c32b3d302d083ec5333f3a5ce04113c38a041100"

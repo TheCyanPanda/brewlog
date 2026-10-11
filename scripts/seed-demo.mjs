@@ -4,10 +4,18 @@
 // charts and suggestions in the app have a story to tell.
 //
 // Usage: node scripts/seed-demo.mjs [base_url]     (default http://localhost:3001)
-// Login: demo / demo1234. Exits without changes if the demo user already has bags.
+// Logins: demo / demo1234 (home brewer), nordlys / demo1234 (roaster portal).
+// Skips the brews if the demo user already has bags.
+//
+// Roaster accounts can't be self-registered, so the roaster role is granted
+// with psql using DATABASE_URL (from the environment or .env).
+
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 const BASE = process.argv[2] ?? 'http://localhost:3001';
 const USER = { username: 'demo', password: 'demo1234' };
+const ROASTER = { username: 'nordlys', password: 'demo1234', display_name: 'Nordlys Kafferosteri' };
 const DAY = 24 * 60 * 60 * 1000;
 
 // Deterministic pseudo-random numbers, so every seed gives the same data
@@ -101,7 +109,36 @@ function review(rating, notes) {
 
 // ---- Seeding ----
 
+function databaseUrl() {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  try {
+    const env = readFileSync(new URL('../.env', import.meta.url), 'utf8');
+    return env.match(/^DATABASE_URL=(.*)$/m)?.[1]?.trim();
+  } catch {
+    return undefined;
+  }
+}
+
+// Demo roaster account for the fictional Nordlys Kafferosteri
+async function seedRoaster() {
+  try {
+    await api('POST', '/auth/register', ROASTER);
+  } catch {
+    // already exists
+  }
+  const url = databaseUrl();
+  if (!url) {
+    console.log('No DATABASE_URL: roaster account created but not granted the roaster role.');
+    return;
+  }
+  execFileSync('psql', [url, '-qc',
+    `UPDATE users SET role = 'roaster', roaster_name = 'Nordlys Kafferosteri' WHERE username = '${ROASTER.username}';`]);
+  console.log(`Roaster account: ${ROASTER.username} / ${ROASTER.password}`);
+}
+
 async function main() {
+  await seedRoaster();
+
   try {
     await api('POST', '/auth/register', { ...USER, display_name: 'Demo Brewer' });
     console.log('Registered user demo');

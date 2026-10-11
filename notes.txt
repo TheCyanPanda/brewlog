@@ -104,7 +104,10 @@ pg_ctl -D ~/pgdata -o "-p 3000 -k $HOME/pgdata" -l ~/pgdata/server.log start
 # Run backend + PWA on http://localhost:3001 (run from repo root; WEB_DIR overrides the web folder)
 cargo run -p coffeelog-backend
 
-# Seed demo data: user demo / demo1234 with gear, recipes, 8 bags, ~90 brews (idempotent)
+# Seed demo data (idempotent):
+#   demo / demo1234     home brewer with gear, recipes, 8 bags, ~90 brews
+#   nordlys / demo1234  roaster account (fictional Nordlys Kafferosteri) -> roaster portal
+#                       ("Roaster? Log in here" on the login screen; role is granted via psql)
 node scripts/seed-demo.mjs
 # Re-seed from scratch:
 psql postgres://brewlog:test123@localhost:3000/coffeelog_db -c "DELETE FROM users WHERE username='demo';" && node scripts/seed-demo.mjs

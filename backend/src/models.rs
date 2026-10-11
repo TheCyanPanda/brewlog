@@ -16,6 +16,8 @@ pub struct User {
     pub password_hash: String,
     pub is_admin: bool,
     pub created_at: DateTime<Utc>,
+    pub role: String,                  // 'user' | 'roaster'
+    pub roaster_name: Option<String>,  // set for roaster accounts
 }
 
 // Registration input — plain-text password, hashed server-side before storage
@@ -287,4 +289,7 @@ pub struct LoginResponse {
     pub token: String,
     pub user_id: i32,
     pub username: String,
+    pub display_name: Option<String>,
+    pub role: String,
+    pub roaster_name: Option<String>,
 }

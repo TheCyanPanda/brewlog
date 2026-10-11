@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../state/app_data.dart';
 import '../theme.dart';
 import 'home_screen.dart';
+import 'roaster_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final AppData data;
@@ -19,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _roasterMode = false; // only changes the wording; the account's role decides where you land
   String? _errorMessage; // null = no error to show
 
   // Always dispose controllers to free memory.
@@ -36,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await widget.data.services.auth.login(
+      final String role = await widget.data.services.auth.login(
         _usernameController.text.trim(),
         _passwordController.text,
       );
@@ -48,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => HomeScreen(data: widget.data),
+          builder: (_) => role == 'roaster' ? RoasterHomeScreen(data: widget.data) : HomeScreen(data: widget.data),
         ),
       );
     } on DioException catch (e) {
@@ -79,22 +81,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 76.0,
                   height: 76.0,
                   decoration: BoxDecoration(
-                    color: BrewColors.caramel.withValues(alpha: 0.15),
+                    color: (_roasterMode ? BrewColors.sage : BrewColors.caramel).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(24.0),
                   ),
-                  child: const Icon(Icons.coffee_rounded, size: 40.0, color: BrewColors.caramel),
+                  child: Icon(
+                    _roasterMode ? Icons.storefront_rounded : Icons.coffee_rounded,
+                    size: 40.0,
+                    color: _roasterMode ? BrewColors.sage : BrewColors.caramel,
+                  ),
                 ),
               ),
               const SizedBox(height: 20.0),
-              const Text(
-                'Brewlog',
-                style: TextStyle(fontSize: 34.0, fontWeight: FontWeight.w800, letterSpacing: -0.8),
+              Text(
+                _roasterMode ? 'Brewlog for roasters' : 'Brewlog',
+                style: const TextStyle(fontSize: 34.0, fontWeight: FontWeight.w800, letterSpacing: -0.8),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6.0),
-              const Text(
-                'Remember what made the cup good.',
-                style: TextStyle(color: BrewColors.muted, fontSize: 15.0),
+              Text(
+                _roasterMode ? 'See how your coffee tastes at home.' : 'Remember what made the cup good.',
+                style: const TextStyle(color: BrewColors.muted, fontSize: 15.0),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40.0),
@@ -145,7 +151,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 20.0,
                         child: CircularProgressIndicator(strokeWidth: 2.0),
                       )
-                    : const Text('Log in'),
+                    : Text(_roasterMode ? 'Log in to roaster portal' : 'Log in'),
+              ),
+              const SizedBox(height: 12.0),
+              TextButton(
+                onPressed: () => setState(() => _roasterMode = !_roasterMode),
+                child: Text(_roasterMode ? 'Home brewer? Log in here' : 'Roaster? Log in here'),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/roaster_home_screen.dart';
 import 'services/api_client.dart';
 import 'services/app_services.dart';
 import 'state/app_data.dart';
@@ -68,12 +69,16 @@ class StartupRouter extends StatelessWidget {
 
   const StartupRouter({super.key, required this.data});
 
+  // (has a saved token, account role)
+  Future<(bool, String)> _session() async =>
+      (await data.services.auth.isLoggedIn(), await data.services.auth.currentRole());
+
   @override
   Widget build(BuildContext context) {
     // FutureBuilder rebuilds when the async check completes.
-    return FutureBuilder<bool>(
-      future: data.services.auth.isLoggedIn(),
-      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+    return FutureBuilder<(bool, String)>(
+      future: _session(),
+      builder: (BuildContext context, AsyncSnapshot<(bool, String)> snapshot) {
         // Still waiting for SharedPreferences to respond.
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -81,9 +86,10 @@ class StartupRouter extends StatelessWidget {
           );
         }
 
-        // Token found — go straight home.
-        if (snapshot.data == true) {
-          return HomeScreen(data: data);
+        // Token found — go straight home (roaster accounts to the roaster portal).
+        final (bool loggedIn, String role) = snapshot.data ?? (false, 'user');
+        if (loggedIn) {
+          return role == 'roaster' ? RoasterHomeScreen(data: data) : HomeScreen(data: data);
         }
 
         // No token — user must log in.

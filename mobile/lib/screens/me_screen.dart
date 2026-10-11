@@ -10,7 +10,6 @@ import 'coffee_year_screen.dart';
 import 'equipment_screen.dart';
 import 'insights_screen.dart';
 import 'recipes_screen.dart';
-import 'roaster_portal_screen.dart';
 import 'suggestions_screen.dart';
 
 // Profile tab: totals, your taste, and everything that isn't daily logging.
@@ -115,16 +114,6 @@ class MeScreen extends StatelessWidget {
                   title: 'Recipes',
                   subtitle: '${data.recipes.length} saved',
                   onTap: () => _open(context, RecipesScreen(data: data)),
-                ),
-              ]),
-              const SectionHeader('For roasters'),
-              _MenuCard(children: <Widget>[
-                _MenuRow(
-                  icon: Icons.storefront_outlined,
-                  color: BrewColors.sage,
-                  title: 'Roaster view',
-                  subtitle: 'What a partner roaster sees (preview)',
-                  onTap: () => _open(context, RoasterPortalScreen(data: data)),
                 ),
               ]),
               const SizedBox(height: 16),

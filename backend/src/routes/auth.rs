@@ -123,6 +123,9 @@ async fn login(
         token: raw_token,   // raw token — only time it leaves the server
         user_id: user.id,
         username: user.username.clone(),
+        display_name: user.display_name.clone(),
+        role: user.role.clone(),
+        roaster_name: user.roaster_name.clone(),
     }));
     if res.is_ok() {
         info!("User: '{}' - Login successful", body.username);

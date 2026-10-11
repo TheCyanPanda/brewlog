@@ -777,7 +777,7 @@ class _RoastersTab extends StatelessWidget {
                   children: <Widget>[
                     Text('See how your coffee tastes at home', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                     SizedBox(height: 3),
-                    Text('Preview the roaster portal: aggregated, anonymised insights per coffee.',
+                    Text('Roasters log in to their own portal. Tap to preview: aggregated, anonymised insights per coffee.',
                         style: TextStyle(color: BrewColors.muted, fontSize: 13, height: 1.35)),
                   ],
                 ),

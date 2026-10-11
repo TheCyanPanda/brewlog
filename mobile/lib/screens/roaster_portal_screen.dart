@@ -12,8 +12,11 @@ import '../widgets/common.dart';
 
 class RoasterPortalScreen extends StatefulWidget {
   final AppData data;
+  // true when shown as the Insights tab of a logged-in roaster account
+  // (plans live in the Roastery tab then); false = preview from the user app
+  final bool asRoaster;
 
-  const RoasterPortalScreen({super.key, required this.data});
+  const RoasterPortalScreen({super.key, required this.data, this.asRoaster = false});
 
   @override
   State<RoasterPortalScreen> createState() => _RoasterPortalScreenState();
@@ -30,18 +33,22 @@ class _RoasterPortalScreenState extends State<RoasterPortalScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text('Roaster portal'),
-            Text('Nordlys Kafferosteri', style: TextStyle(fontSize: 13, color: BrewColors.muted, fontWeight: FontWeight.w500)),
+            Text(widget.asRoaster ? 'Insights' : 'Roaster portal'),
+            const Text('Nordlys Kafferosteri', style: TextStyle(fontSize: 13, color: BrewColors.muted, fontWeight: FontWeight.w500)),
           ],
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 40),
         children: <Widget>[
-          const DemoBanner(text: 'Preview of what a partner roaster sees. Fictional roaster, example numbers.'),
+          DemoBanner(
+            text: widget.asRoaster
+                ? 'Example numbers. Real insights appear once at least 10 different home brewers have logged your coffee.'
+                : 'Preview of what a partner roaster sees. Fictional roaster, example numbers.',
+          ),
 
           // Coffee picker
           SizedBox(
@@ -191,8 +198,9 @@ class _RoasterPortalScreenState extends State<RoasterPortalScreen> {
             ),
           ),
 
+          if (!widget.asRoaster) ...<Widget>[
           const SectionHeader('Plans for roasters'),
-          for (final PriceTier t in kRoasterTiers) _TierCard(tier: t),
+          for (final PriceTier t in kRoasterTiers) TierCard(tier: t),
           AppCard(
             color: BrewColors.caramel.withValues(alpha: 0.12),
             child: const Row(
@@ -208,6 +216,7 @@ class _RoasterPortalScreenState extends State<RoasterPortalScreen> {
               ],
             ),
           ),
+          ],
         ],
       ),
     );
@@ -236,9 +245,9 @@ class _Metric extends StatelessWidget {
   }
 }
 
-class _TierCard extends StatelessWidget {
+class TierCard extends StatelessWidget {
   final PriceTier tier;
-  const _TierCard({required this.tier});
+  const TierCard({super.key, required this.tier});
 
   @override
   Widget build(BuildContext context) {
