@@ -1,134 +1,84 @@
 import 'package:flutter/material.dart';
 import '../models/brew.dart';
+import '../models/coffee_bag.dart';
+import '../models/equipment.dart';
+import '../state/app_data.dart';
+import '../theme.dart';
+import '../utils/format.dart';
+import 'common.dart';
 
+// A brew in a list, Strava-activity style: what, when, the key numbers, rating.
 class BrewCard extends StatelessWidget {
   final Brew brew;
+  final AppData data;
+  final VoidCallback? onTap;
 
-  const BrewCard({super.key, required this.brew});
+  const BrewCard({super.key, required this.brew, required this.data, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final CoffeeBag? bag = data.bag(brew.coffeeBagId);
+    final Brewer? brewer = data.brewer(brew.brewerId);
+    final Grinder? grinder = data.grinder(brew.grinderId);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-
-            // Top row: brew hash + rating badge
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  brew.brewHash ?? 'Brew #${brew.id}', // If hash is missing, default to Brew#XX
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+    return AppCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              IconTile(brewTypeIcon(brewer?.brewType), size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      bag?.originLabel ?? 'Unknown coffee',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      <String?>[formatRelative(brew.brewDatetime), prettyBrewType(brewer?.brewType), bag?.roaster]
+                          .whereType<String>()
+                          .join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: BrewColors.muted, fontSize: 12.5),
+                    ),
+                  ],
                 ),
-                if (brew.rating != null) _RatingBadge(rating: brew.rating!),
-              ],
-            ),
-
-            const SizedBox(height: 4.0),
-
-            // Date
-            Text(
-              _formatDate(brew.brewDatetime),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
               ),
+              if (brew.rating != null) RatingBadge(rating: brew.rating, compact: true),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: <Widget>[
+              Expanded(child: StatValue(value: formatRatio(brew.ratio), label: 'Ratio', size: 17)),
+              Expanded(child: StatValue(value: brew.waterTempC == null ? '–' : '${formatNum(brew.waterTempC)}°', label: 'Temp', size: 17)),
+              Expanded(child: StatValue(value: formatSeconds(brew.brewTimeSecs), label: 'Time', size: 17)),
+              Expanded(child: StatValue(value: brew.grindSetting ?? '–', label: grinder?.name ?? 'Grind', size: 17)),
+            ],
+          ),
+          if (brew.review != null) ...<Widget>[
+            const SizedBox(height: 12),
+            Text(
+              brew.review!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13.5, height: 1.35),
             ),
-
-            const SizedBox(height: 8.0),
-
-            // Stats row: dose · ratio · time
-            Row(
-              children: <Widget>[
-                if (brew.coffeeGrams != null)
-                  _StatChip(label: '${brew.coffeeGrams!.toStringAsFixed(1)}g'),
-                if (brew.ratio != null)
-                  _StatChip(label: '1:${brew.ratio!.toStringAsFixed(1)}'),
-                if (brew.brewTimeDisplay != null)
-                  _StatChip(label: brew.brewTimeDisplay!),
-              ],
-            ),
-
           ],
-        ),
+          if (brew.brewHash != null) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(brew.brewHash!, style: const TextStyle(color: BrewColors.muted, fontSize: 11.5, letterSpacing: 0.5)),
+          ],
+        ],
       ),
     );
   }
-
-
-  // TODO: Refactor this out to a "utils" module
-  // Simple date format: "2 Mar 2026"
-  String _formatDate(DateTime dt) {
-    const List<String> months = <String>[
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
-  }
 }
-
-// colored rating badge — maps the 5 rating strings to colours
-class _RatingBadge extends StatelessWidget {
-  final String rating;
-
-  const _RatingBadge({required this.rating});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: _ratingColor(rating).withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: _ratingColor(rating), width: 1.0),
-      ),
-      child: Text(
-        rating,
-        style: TextStyle(
-          color: _ratingColor(rating),
-          fontSize: 12.0,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Color _ratingColor(String rating) {
-    switch (rating) {
-      case 'excellent': return Colors.green;
-      case 'good':      return Colors.lightGreen;
-      case 'ok':        return Colors.amber;
-      case 'so-so':     return Colors.orange;
-      case 'bad':       return Colors.red;
-      default:          return Colors.grey;
-    }
-  }
-}
-
-// Small pill for a stat value
-class _StatChip extends StatelessWidget {
-  final String label;
-
-  const _StatChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Text(label, style: const TextStyle(fontSize: 12.0)),
-    );
-  }
-}
-

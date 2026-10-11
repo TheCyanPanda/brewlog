@@ -3,6 +3,8 @@ class Grinder {
   final int userId;
   final String name;
   final String? notes;
+  final DateTime? purchasedAt;
+  final DateTime? lastCleanedAt;
   final DateTime createdAt;
 
   const Grinder({
@@ -10,6 +12,8 @@ class Grinder {
     required this.userId,
     required this.name,
     this.notes,
+    this.purchasedAt,
+    this.lastCleanedAt,
     required this.createdAt,
   });
 
@@ -19,6 +23,8 @@ class Grinder {
       userId: json["user_id"] as int,
       name: json["name"] as String,
       notes: json["notes"] as String?,
+      purchasedAt: _date(json["purchased_at"]),
+      lastCleanedAt: _date(json["last_cleaned_at"]),
       createdAt: DateTime.parse(json["created_at"] as String),
     );
   }
@@ -38,6 +44,9 @@ class Brewer {
   final String? brand;
   final String? model;
   final String? notes;
+  final DateTime? purchasedAt;
+  final DateTime? lastCleanedAt;
+  final DateTime? lastDescaledAt;
   final DateTime createdAt;
 
   const Brewer({
@@ -49,6 +58,9 @@ class Brewer {
     this.brand,
     this.model,
     this.notes,
+    this.purchasedAt,
+    this.lastCleanedAt,
+    this.lastDescaledAt,
     required this.createdAt
   });
 
@@ -62,14 +74,18 @@ class Brewer {
         brand: json["brand"] as String?,
         model: json["model"] as String?,
         notes: json["notes"] as String?,
+        purchasedAt: _date(json["purchased_at"]),
+        lastCleanedAt: _date(json["last_cleaned_at"]),
+        lastDescaledAt: _date(json["last_descaled_at"]),
         createdAt: DateTime.parse(json["created_at"] as String),
     );
   }
+
+  bool get isEspresso => brewMethod == 'espresso';
 
   @override
   String toString() => name;
 
 }
 
-
-
+DateTime? _date(Object? v) => v == null ? null : DateTime.parse(v as String).toLocal();

@@ -3,6 +3,8 @@ import 'auth_service.dart';
 import 'bag_service.dart';
 import 'brew_service.dart';
 import 'equipment_service.dart';
+import 'recipe_service.dart';
+import 'scan_service.dart';
 
 /// Bundles all API services into one object so that widgets only
 /// need a single `services` parameter instead of a growing list.
@@ -11,12 +13,16 @@ class AppServices {
   final BrewService brews;
   final EquipmentService equipment;
   final BagService bags;
+  final RecipeService recipes;
+  final ScanService scan;
 
   const AppServices({
     required this.auth,
     required this.brews,
     required this.equipment,
     required this.bags,
+    required this.recipes,
+    required this.scan,
   });
 
   /// Constructs all services from a single shared [Dio] instance.
@@ -25,5 +31,7 @@ class AppServices {
         brews: BrewService(dio),
         equipment: EquipmentService(dio),
         bags: BagService(dio),
+        recipes: RecipeService(dio),
+        scan: ScanService(dio),
       );
 }

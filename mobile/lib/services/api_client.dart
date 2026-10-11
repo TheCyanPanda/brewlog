@@ -1,10 +1,15 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Base URL of the backend. This points to our local machine. On Android emulator, 10.0.2.2 is the
-// alias for localhost (leading 'k' is for constant)
-const String kbaseUrl = 'http://10.0.2.2:3001';
+// Base URL of the backend (leading 'k' is for constant). Override at build time with
+// --dart-define=API_BASE_URL=http://host:port
+// Defaults: on web the PWA is served by the backend itself, so use the same origin.
+// On Android emulator, 10.0.2.2 is the alias for the host machine's localhost.
+const String _kApiBaseUrlOverride = String.fromEnvironment('API_BASE_URL');
+final String kbaseUrl = _kApiBaseUrlOverride.isNotEmpty
+    ? _kApiBaseUrlOverride
+    : (kIsWeb ? Uri.base.origin : 'http://10.0.2.2:3001');
 
 // Called by the interceptor when a 401 (Unauthorized error) is received.
 // Navigates to login (e.g expired/invalid token)

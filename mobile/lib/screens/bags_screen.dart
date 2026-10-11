@@ -1,112 +1,127 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../widgets/bag_card.dart';
-import '../models/coffee_bag.dart';
-import '../services/app_services.dart';
-import '../widgets/add_bag_sheet.dart';
 
+import '../models/coffee_bag.dart';
+import '../state/app_data.dart';
+import '../widgets/add_bag_sheet.dart';
+import '../widgets/bag_card.dart';
+import '../widgets/common.dart';
+import 'bag_detail_screen.dart';
 
 class BagsScreen extends StatefulWidget {
-  final AppServices services;
+  final AppData data;
 
-  const BagsScreen({super.key, required this.services});
+  const BagsScreen({super.key, required this.data});
 
   @override
   State<BagsScreen> createState() => _BagsScreenState();
 }
 
+enum _BagFilter { opened, finished, favorites, all }
+
 class _BagsScreenState extends State<BagsScreen> {
-  List<CoffeeBag>? _bags; // List of Coffee bags. null = not loaded
-  String? _error;
-  bool _isLoading = true;  // If bags are waiting to be loaded
+  _BagFilter _filter = _BagFilter.opened;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadBags();
-  }
-
-  Future<void> _loadBags() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-      // GET /bags and assign result to _bags
-      try {
-        final List<CoffeeBag> bags = await widget.services.bags.listBags();
-        if (mounted) {
-          setState(() {
-            _bags = bags;
-            _isLoading = false;
-          });
-        }
-      } on DioException catch(_) { // TODO: Should we really catch all ?
-        if (mounted) {
-          setState(() {
-            _error = "Error loading bags. Is the server running?";
-            _isLoading = false;
-          });
-        }
-      }
-    }
-
-  // '+ Add bag'
   Future<void> _openAddBag() async {
-    final CoffeeBag? newBag = await showModalBottomSheet<CoffeeBag>(
+    final CoffeeBag? bag = await showModalBottomSheet<CoffeeBag>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => AddBagSheet(services: widget.services),
+      builder: (_) => AddBagSheet(data: widget.data),
     );
-    if (newBag != null) _loadBags();
+    if (bag != null && mounted) showSnack(context, 'Added ${bag.bagHash ?? 'bag'}');
+  }
+
+  bool _matches(CoffeeBag b, _BagFilter f) {
+    switch (f) {
+      case _BagFilter.opened: return b.status != 'finished';
+      case _BagFilter.finished: return b.status == 'finished';
+      case _BagFilter.favorites: return b.favorite;
+      case _BagFilter.all: return true;
+    }
+  }
+
+  String _label(_BagFilter f) {
+    switch (f) {
+      case _BagFilter.opened: return 'In use';
+      case _BagFilter.finished: return 'Finished';
+      case _BagFilter.favorites: return 'Favorites';
+      case _BagFilter.all: return 'All';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My bags')),
-      body: _buildBody(),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _openAddBag,
-        tooltip: 'Log a brew',
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add_a_photo_outlined),
+        label: const Text('Add bag'),
       ),
-    );
-  }
+      body: ListenableBuilder(
+        listenable: widget.data,
+        builder: (BuildContext context, _) {
+          final AppData data = widget.data;
+          // In use: most recently brewed first. Others: newest bag first.
+          final List<CoffeeBag> bags = _filter == _BagFilter.opened
+              ? data.activeBags
+              : data.bags.where((CoffeeBag b) => _matches(b, _filter)).toList();
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(_error!, textAlign: TextAlign.center),
-            const SizedBox(height: 16.0),
-            FilledButton(onPressed: _loadBags, child: const Text('Retry')),
-          ]
-        )
-      );
-    }
-
-    if (_bags!.isEmpty) {
-      return const Center(child: Text("No bags yet"));
-    }
-
-    // RefreshIndicator adds pull-to-refresh on the list.
-    return RefreshIndicator(
-      onRefresh: _loadBags,
-      child: ListView.builder(
-        itemCount: _bags!.length,
-        itemBuilder: (BuildContext context, int index) {
-          return BagCard(bag: _bags![index]);
+          return RefreshIndicator(
+            onRefresh: data.load,
+            child: CustomScrollView(
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 48,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      children: <Widget>[
+                        for (final _BagFilter f in _BagFilter.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text('${_label(f)} ${data.bags.where((CoffeeBag b) => _matches(b, f)).length}'),
+                              selected: _filter == f,
+                              onSelected: (_) => setState(() => _filter = f),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (bags.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: EmptyState(
+                      icon: Icons.inventory_2_outlined,
+                      title: 'No bags here',
+                      message: 'Snap a photo of a bag and we fill in the details.',
+                      actionLabel: 'Add bag',
+                      onAction: _openAddBag,
+                    ),
+                  )
+                else
+                  SliverList.list(
+                    children: <Widget>[
+                      const SizedBox(height: 4),
+                      for (final CoffeeBag b in bags)
+                        BagCard(
+                          bag: b,
+                          data: data,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(builder: (_) => BagDetailScreen(data: data, bag: b)),
+                          ),
+                        ),
+                      const SizedBox(height: 96),
+                    ],
+                  ),
+              ],
+            ),
+          );
         },
       ),
     );
   }
-
-
 }

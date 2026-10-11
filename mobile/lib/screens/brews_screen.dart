@@ -1,113 +1,129 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../models/brew.dart';
-import '../services/app_services.dart';
+import '../state/app_data.dart';
+import '../utils/format.dart';
 import '../widgets/brew_card.dart';
-import 'add_brew_screen.dart';
+import '../widgets/common.dart';
+import 'brew_detail_screen.dart';
+import 'log_brew_screen.dart';
 
 class BrewsScreen extends StatefulWidget {
-  final AppServices services;
+  final AppData data;
 
-  const BrewsScreen({super.key, required this.services});
+  const BrewsScreen({super.key, required this.data});
 
   @override
   State<BrewsScreen> createState() => _BrewsScreenState();
 }
 
 class _BrewsScreenState extends State<BrewsScreen> {
-  List<Brew>? _brews;  // List of brews. null = not yet loaded
-  String? _error;
-  bool _isLoading = true;  // If brews are waiting to be loaded
+  String? _rating; // null = all
 
-  @override
-  void initState() {
-    super.initState();
-    _loadBrews();
-  }
-
-  Future<void> _loadBrews() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    // GET /brews and assign _brews to the result
-    try {
-      final List<Brew> brews = await widget.services.brews.listBrews();
-      if (mounted) {
-        setState(() {
-          _brews = brews;
-          _isLoading = false;
-        });
-      }
-    } on DioException catch (_) { // TODO: Should we really catch all ?
-      if (mounted) {
-        setState(() {
-          _error = 'Could not load brews. Is the server running?';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  // '+ Add brew'
-  Future<void> _openAddBrew() async {
-    // Wait for AddBrewScreen to close, then refresh regardless of outcome.
-    await Navigator.push<void>(
+  Future<void> _logBrew() async {
+    final Brew? brew = await Navigator.push<Brew>(
       context,
-      MaterialPageRoute<void>(
-        builder: (_) => AddBrewScreen(services: widget.services),
-      ),
+      MaterialPageRoute<Brew>(builder: (_) => LogBrewScreen(data: widget.data), fullscreenDialog: true),
     );
-    _loadBrews();
+    if (brew != null && mounted) showSnack(context, 'Saved ${brew.brewHash ?? 'brew'}');
+  }
+
+  // "This week", "Earlier this month", "September 2026"
+  String _section(DateTime d) {
+    final DateTime now = DateTime.now();
+    final int days = DateTime(now.year, now.month, now.day).difference(DateTime(d.year, d.month, d.day)).inDays;
+    if (days < 7) return 'This week';
+    if (d.year == now.year && d.month == now.month) return 'Earlier this month';
+    const List<String> months = <String>[
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    return '${months[d.month - 1]} ${d.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Brews')),
-      body: _buildBody(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddBrew,
-        tooltip: 'Log a brew',
-        child: const Icon(Icons.add),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _logBrew,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Log brew'),
       ),
-    );
-  }
+      body: ListenableBuilder(
+        listenable: widget.data,
+        builder: (BuildContext context, _) {
+          final List<Brew> brews = widget.data.brews
+              .where((Brew b) => _rating == null || b.rating == _rating)
+              .toList();
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+          final List<Widget> items = <Widget>[];
+          String? current;
+          for (final Brew b in brews) {
+            final String s = _section(b.brewDatetime);
+            if (s != current) {
+              items.add(SectionHeader(s, padding: const EdgeInsets.fromLTRB(20, 18, 12, 6)));
+              current = s;
+            }
+            items.add(BrewCard(
+              brew: b,
+              data: widget.data,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(builder: (_) => BrewDetailScreen(data: widget.data, brew: b)),
+              ),
+            ));
+          }
 
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(_error!, textAlign: TextAlign.center),
-            const SizedBox(height: 16.0),
-            FilledButton(
-              onPressed: _loadBrews,
-              child: const Text('Retry'),
+          return RefreshIndicator(
+            onRefresh: widget.data.load,
+            child: CustomScrollView(
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 48,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text('All ${widget.data.brews.length}'),
+                            selected: _rating == null,
+                            onSelected: (_) => setState(() => _rating = null),
+                          ),
+                        ),
+                        for (final String r in kRatings.reversed)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              avatar: Icon(ratingIcon(r), size: 16, color: ratingColor(r)),
+                              label: Text(ratingLabel(r)),
+                              selected: _rating == r,
+                              onSelected: (bool on) => setState(() => _rating = on ? r : null),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (brews.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: EmptyState(
+                      icon: Icons.coffee_outlined,
+                      title: _rating == null ? 'No brews yet' : 'No ${ratingLabel(_rating).toLowerCase()} brews',
+                      message: _rating == null ? 'Log your first cup — it takes a few taps.' : null,
+                      actionLabel: _rating == null ? 'Log brew' : null,
+                      onAction: _logBrew,
+                    ),
+                  )
+                else
+                  SliverList.list(children: <Widget>[...items, const SizedBox(height: 96)]),
+              ],
             ),
-          ],
-        ),
-      );
-    }
-
-    if (_brews!.isEmpty) {
-      return const Center(child: Text('No brews yet. Start brewing! ☕'));
-    }
-
-    // RefreshIndicator adds pull-to-refresh on the list.
-    return RefreshIndicator(
-      onRefresh: _loadBrews,
-      child: ListView.builder(
-        itemCount: _brews!.length,
-        itemBuilder: (BuildContext context, int index) {
-          return BrewCard(brew: _brews![index]);
+          );
         },
       ),
     );

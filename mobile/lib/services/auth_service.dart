@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Key for storing the token in local storage
+// Keys for storing the token and username in local storage
 const String _kTokenKey = 'auth_token';
+const String _kUsernameKey = 'username';
 
 class AuthService {
   // Dio instance is injected (not created here)
@@ -38,6 +39,13 @@ class AuthService {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kTokenKey, token);
+    await prefs.setString(_kUsernameKey, username);
+  }
+
+  // Username of the logged-in user (saved at login), for display
+  Future<String?> currentUsername() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kUsernameKey);
   }
 
   // POST /auth/logout - tells the backend to revoke the token.
@@ -49,6 +57,7 @@ class AuthService {
     } finally {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove(_kTokenKey);
+      await prefs.remove(_kUsernameKey);
     }
   }
 

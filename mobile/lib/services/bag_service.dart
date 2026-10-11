@@ -35,6 +35,7 @@ class BagService {
     DateTime? roastDate,
     bool caffeineFree = false,
     String? batchId,
+    String status = 'opened',
 
   }) async {
     final Response<Map<String, dynamic>> response =
@@ -51,12 +52,23 @@ class BagService {
             'process': ?process,
             'taste_notes': ?tasteNotes,
             'bean_type': ?beanType,
-            'harvest_date': ?harvestDate?.toIso8601String(),
-            'roast_date': ?roastDate?.toIso8601String(),
+            'harvest_date': ?_date(harvestDate),
+            'roast_date': ?_date(roastDate),
             'caffeine_free': caffeineFree,
             'batch_id': ?batchId,
+            'status': status,
           },
         );
     return CoffeeBag.fromJson(response.data!);
   }
+
+  // PUT /bags/:id — send the full bag (see CoffeeBag.toJson for overrides)
+  Future<CoffeeBag> updateBag(int id, Map<String, dynamic> body) async {
+    final Response<Map<String, dynamic>> response =
+        await _dio.put<Map<String, dynamic>>('/bags/$id', data: body);
+    return CoffeeBag.fromJson(response.data!);
+  }
+
+  // Backend expects plain dates: "2026-09-21"
+  static String? _date(DateTime? d) => d?.toIso8601String().substring(0, 10);
 }

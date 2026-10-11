@@ -1,12 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../services/app_services.dart';
+import '../state/app_data.dart';
+import '../theme.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  final AppServices services;
+  final AppData data;
 
-  const LoginScreen({super.key, required this.services});
+  const LoginScreen({super.key, required this.data});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -35,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await widget.services.auth.login(
+      await widget.data.services.auth.login(
         _usernameController.text.trim(),
         _passwordController.text,
       );
@@ -47,14 +48,14 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => HomeScreen(services: widget.services),
+          builder: (_) => HomeScreen(data: widget.data),
         ),
       );
     } on DioException catch (e) {
       setState(() {
         _errorMessage = e.response?.statusCode == 401
             ? 'Incorrect username or password'
-            : 'Could not connect. Is the server running? ($e)';
+            : 'Could not connect. Is the server running?';
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -73,18 +74,36 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
 
+              Center(
+                child: Container(
+                  width: 76.0,
+                  height: 76.0,
+                  decoration: BoxDecoration(
+                    color: BrewColors.caramel.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(24.0),
+                  ),
+                  child: const Icon(Icons.coffee_rounded, size: 40.0, color: BrewColors.caramel),
+                ),
+              ),
+              const SizedBox(height: 20.0),
               const Text(
-                '☕ CoffeeLog',
-                style: TextStyle(fontSize: 32.0, fontWeight: FontWeight.bold),
+                'Brewlog',
+                style: TextStyle(fontSize: 34.0, fontWeight: FontWeight.w800, letterSpacing: -0.8),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48.0),
+              const SizedBox(height: 6.0),
+              const Text(
+                'Remember what made the cup good.',
+                style: TextStyle(color: BrewColors.muted, fontSize: 15.0),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40.0),
 
               TextField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
                   labelText: 'Username',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
                 autocorrect: false,
                 enableSuggestions: false,
@@ -96,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock_outline_rounded),
                 ),
                 obscureText: true, // masks input
                 textInputAction: TextInputAction.done,

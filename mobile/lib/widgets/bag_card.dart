@@ -1,102 +1,114 @@
 import 'package:flutter/material.dart';
+import '../models/brew.dart';
 import '../models/coffee_bag.dart';
-
+import '../services/insights.dart';
+import '../state/app_data.dart';
+import '../theme.dart';
+import '../utils/format.dart';
+import 'common.dart';
 
 class BagCard extends StatelessWidget {
   final CoffeeBag bag;
+  final AppData data;
+  final VoidCallback? onTap;
 
-  const BagCard({super.key, required this.bag});
+  const BagCard({super.key, required this.bag, required this.data, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final List<Brew> brews = data.brewsForBag(bag.id);
+    final Brew? best = bestBrew(brews);
+    final int? rest = bag.daysSinceRoast;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-
-            //Top row: Bag hash + Roaster
-            // TODO: Allow user to set custom alias on bag,
-            // create field in table coffee_bags: alias (Custom name)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  bag.displayName,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+    return AppCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _BagIcon(bag: bag),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(bag.originLabel, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      bag.roaster ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: BrewColors.muted, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              if (bag.favorite) const Icon(Icons.favorite_rounded, color: BrewColors.copper, size: 18),
+              if (bag.rating != null) ...<Widget>[
+                const SizedBox(width: 6),
+                RatingBadge(rating: bag.rating, compact: true),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: <Widget>[
+              if (bag.status == 'unopened') const Pill('Unopened', icon: Icons.lock_outline_rounded, color: BrewColors.sage),
+              if (bag.process != null) Pill(bag.process!),
+              if (bag.variety != null) Pill(bag.variety!),
+              if (bag.roastLevel != null) Pill(bag.roastLevel!),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              Text('${brews.length} brews', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              if (best != null) ...<Widget>[
+                const Text('  ·  ', style: TextStyle(color: BrewColors.muted)),
+                Flexible(
+                  child: Text(
+                    'Best ${best.grindSetting ?? ''} @ ${formatNum(best.waterTempC)}°',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: BrewColors.muted, fontSize: 13),
                   ),
                 ),
-                // TODO: Add badge for rating bag
               ],
-            ),
-
-            // TODO: Add image of bag
-
-            const SizedBox(height: 4.0),
-
-            // Roast date
-            // TODO: Let user select if they want roastDate or createdAt from settings, or this default
-            Text(
-              _formatDate(bag.roastDate != null ? bag.roastDate! : bag.createdAt),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),            ),
-
-            // Coffee Origin + Variety + Process + roast level
-            Row(
-              children: <Widget>[
-                if (bag.originCountry != null)
-                  _StatChip(label: bag.originCountry!),
-                if (bag.variety != null)
-                  _StatChip(label: bag.variety!),
-                if (bag.process != null)
-                  _StatChip(label: bag.process!),
-                if (bag.roastLevel != null)
-                  _StatChip(label: bag.roastLevel!),
-              ],
-            ),
-
-          ],
-        ),
+              const Spacer(),
+              if (rest != null)
+                Text('$rest d off roast', style: const TextStyle(color: BrewColors.muted, fontSize: 12.5)),
+            ],
+          ),
+        ],
       ),
     );
   }
-
-  // TODO: Refactor this out to a "utils" module
-  // Simple date format: "2 Mar 2026"
-  String _formatDate(DateTime dt) {
-    const List<String> months = <String>[
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
-  }
-
 }
 
-// Small pill for a stat value
-// TODO: Refactor to card_utils
-class _StatChip extends StatelessWidget {
-  final String label;
-
-  const _StatChip({required this.label});
+// Colored "bag" tile with the roaster code (MCR, DC, …)
+class _BagIcon extends StatelessWidget {
+  final CoffeeBag bag;
+  const _BagIcon({required this.bag});
 
   @override
   Widget build(BuildContext context) {
+    final String code = (bag.bagHash ?? '').split('-').first;
+    final Color c = BrewColors.series[(bag.roaster ?? '').hashCode.abs() % BrewColors.series.length];
     return Container(
-      margin: const EdgeInsets.only(right: 8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+      width: 44,
+      height: 52,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8.0),
+        color: c.withValues(alpha: 0.18),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8), bottom: Radius.circular(12)),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 12.0)),
+      alignment: Alignment.center,
+      child: Text(
+        code.isEmpty ? '☕' : code,
+        style: TextStyle(color: c, fontWeight: FontWeight.w800, fontSize: code.length > 3 ? 10.5 : 12.5),
+      ),
     );
   }
 }
-

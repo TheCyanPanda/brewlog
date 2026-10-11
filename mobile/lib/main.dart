@@ -4,52 +4,59 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/api_client.dart';
 import 'services/app_services.dart';
+import 'state/app_data.dart';
+import 'theme.dart';
 
 // Global navigation key — lets the auth interceptor navigate to login
 // without needing a BuildContext.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  // `late` allows the onUnauthorized closure to capture `services` before
+  // `late` allows the onUnauthorized closure to capture `data` before
   // it's assigned — by the time a 401 fires, the assignment is long done.
-  late final AppServices services;
+  late final AppData data;
 
   final Dio dio = createApiClient(
     onUnauthorized: () {
+      data.clear();
       // Clear the entire back stack and send the user to login.
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute<void>(
-          builder: (_) => LoginScreen(services: services),
+          builder: (_) => LoginScreen(data: data),
         ),
         (_) => false,
       );
     },
   );
 
-  services = AppServices.fromDio(dio);
+  data = AppData(AppServices.fromDio(dio));
 
-  runApp(CoffeeLogApp(services: services));
+  runApp(BrewlogApp(data: data));
 }
 
-class CoffeeLogApp extends StatelessWidget {
-  final AppServices services;
+class BrewlogApp extends StatelessWidget {
+  final AppData data;
 
-  const CoffeeLogApp({super.key, required this.services});
+  const BrewlogApp({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CoffeeLog',
+      title: 'Brewlog',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6F4E37), // coffee brown
-          brightness: Brightness.dark,
+      theme: buildTheme(),
+      // On wide screens (laptop browser) keep the app phone-sized and centered.
+      builder: (BuildContext context, Widget? child) => ColoredBox(
+        color: const Color(0xFF0E0906),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: child,
+          ),
         ),
-        useMaterial3: true,
       ),
-      home: StartupRouter(services: services),
+      home: StartupRouter(data: data),
     );
   }
 }
@@ -57,15 +64,15 @@ class CoffeeLogApp extends StatelessWidget {
 /// Shown on launch. Checks local storage for a saved token and routes
 /// to [HomeScreen] or [LoginScreen] accordingly.
 class StartupRouter extends StatelessWidget {
-  final AppServices services;
+  final AppData data;
 
-  const StartupRouter({super.key, required this.services});
+  const StartupRouter({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
     // FutureBuilder rebuilds when the async check completes.
     return FutureBuilder<bool>(
-      future: services.auth.isLoggedIn(),
+      future: data.services.auth.isLoggedIn(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         // Still waiting for SharedPreferences to respond.
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -76,11 +83,11 @@ class StartupRouter extends StatelessWidget {
 
         // Token found — go straight home.
         if (snapshot.data == true) {
-          return HomeScreen(services: services);
+          return HomeScreen(data: data);
         }
 
         // No token — user must log in.
-        return LoginScreen(services: services);
+        return LoginScreen(data: data);
       },
     );
   }
