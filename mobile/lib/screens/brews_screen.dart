@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../models/brew.dart';
+import '../services/search.dart';
 import '../state/app_data.dart';
 import '../utils/format.dart';
 import '../widgets/brew_card.dart';
 import '../widgets/common.dart';
+import '../widgets/search_filter_bar.dart';
 import 'brew_detail_screen.dart';
 import 'log_brew_screen.dart';
 
@@ -19,6 +21,7 @@ class BrewsScreen extends StatefulWidget {
 
 class _BrewsScreenState extends State<BrewsScreen> {
   String? _rating; // null = all
+  SearchFilters _filters = SearchFilters.none;
 
   Future<void> _logBrew() async {
     final Brew? brew = await Navigator.push<Brew>(
@@ -53,9 +56,17 @@ class _BrewsScreenState extends State<BrewsScreen> {
       body: ListenableBuilder(
         listenable: widget.data,
         builder: (BuildContext context, _) {
-          final List<Brew> brews = widget.data.brews
-              .where((Brew b) => _rating == null || b.rating == _rating)
+          final AppData data = widget.data;
+          final List<Brew> matching = data.brews
+              .where((Brew b) => brewMatches(
+                    b,
+                    _filters,
+                    bag: data.bag(b.coffeeBagId),
+                    brewer: data.brewer(b.brewerId),
+                    grinder: data.grinder(b.grinderId),
+                  ))
               .toList();
+          final List<Brew> brews = matching.where((Brew b) => _rating == null || b.rating == _rating).toList();
 
           final List<Widget> items = <Widget>[];
           String? current;
@@ -80,6 +91,14 @@ class _BrewsScreenState extends State<BrewsScreen> {
             child: CustomScrollView(
               slivers: <Widget>[
                 SliverToBoxAdapter(
+                  child: SearchFilterBar(
+                    data: data,
+                    filters: _filters,
+                    onChanged: (SearchFilters f) => setState(() => _filters = f),
+                    hint: 'Search roaster, origin, notes…',
+                  ),
+                ),
+                SliverToBoxAdapter(
                   child: SizedBox(
                     height: 48,
                     child: ListView(
@@ -89,7 +108,7 @@ class _BrewsScreenState extends State<BrewsScreen> {
                         Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text('All ${widget.data.brews.length}'),
+                            label: Text('All ${matching.length}'),
                             selected: _rating == null,
                             onSelected: (_) => setState(() => _rating = null),
                           ),
@@ -113,10 +132,19 @@ class _BrewsScreenState extends State<BrewsScreen> {
                     hasScrollBody: false,
                     child: EmptyState(
                       icon: Icons.coffee_outlined,
-                      title: _rating == null ? 'No brews yet' : 'No ${ratingLabel(_rating).toLowerCase()} brews',
-                      message: _rating == null ? 'Log your first cup — it takes a few taps.' : null,
-                      actionLabel: _rating == null ? 'Log brew' : null,
-                      onAction: _logBrew,
+                      title: data.brews.isEmpty
+                          ? 'No brews yet'
+                          : (_filters.isEmpty ? 'No ${ratingLabel(_rating).toLowerCase()} brews' : 'No brews match'),
+                      message: data.brews.isEmpty
+                          ? 'Log your first cup — it takes a few taps.'
+                          : (_filters.isEmpty ? null : 'Try another search or clear the filters.'),
+                      actionLabel: data.brews.isEmpty ? 'Log brew' : (_filters.isEmpty ? null : 'Clear search'),
+                      onAction: data.brews.isEmpty
+                          ? _logBrew
+                          : () => setState(() {
+                                _filters = SearchFilters.none;
+                                _rating = null;
+                              }),
                     ),
                   )
                 else

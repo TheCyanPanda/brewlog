@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../models/brew.dart';
 import '../models/coffee_bag.dart';
+import '../services/search.dart';
 import '../state/app_data.dart';
 import '../widgets/add_bag_sheet.dart';
 import '../widgets/bag_card.dart';
 import '../widgets/common.dart';
+import '../widgets/search_filter_bar.dart';
 import 'bag_detail_screen.dart';
 
 class BagsScreen extends StatefulWidget {
@@ -20,6 +23,7 @@ enum _BagFilter { opened, finished, favorites, all }
 
 class _BagsScreenState extends State<BagsScreen> {
   _BagFilter _filter = _BagFilter.opened;
+  SearchFilters _search = SearchFilters.none;
 
   Future<void> _openAddBag() async {
     final CoffeeBag? bag = await showModalBottomSheet<CoffeeBag>(
@@ -61,15 +65,36 @@ class _BagsScreenState extends State<BagsScreen> {
         listenable: widget.data,
         builder: (BuildContext context, _) {
           final AppData data = widget.data;
+
+          // Grinders used per bag, for the "grinder used" filter
+          final Map<int, Set<int>> grindersByBag = <int, Set<int>>{};
+          for (final Brew br in data.brews) {
+            if (br.coffeeBagId != null && br.grinderId != null) {
+              (grindersByBag[br.coffeeBagId!] ??= <int>{}).add(br.grinderId!);
+            }
+          }
+          bool searchMatch(CoffeeBag b) =>
+              bagMatches(b, _search, grindersUsed: grindersByBag[b.id] ?? const <int>{});
+          final List<CoffeeBag> found = data.bags.where(searchMatch).toList();
+
           // In use: most recently brewed first. Others: newest bag first.
-          final List<CoffeeBag> bags = _filter == _BagFilter.opened
-              ? data.activeBags
-              : data.bags.where((CoffeeBag b) => _matches(b, _filter)).toList();
+          final List<CoffeeBag> bags = (_filter == _BagFilter.opened
+                  ? data.activeBags
+                  : data.bags.where((CoffeeBag b) => _matches(b, _filter)))
+              .where(searchMatch)
+              .toList();
 
           return RefreshIndicator(
             onRefresh: data.load,
             child: CustomScrollView(
               slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: SearchFilterBar(
+                    data: data,
+                    filters: _search,
+                    onChanged: (SearchFilters f) => setState(() => _search = f),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 48,
@@ -81,7 +106,7 @@ class _BagsScreenState extends State<BagsScreen> {
                           Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: ChoiceChip(
-                              label: Text('${_label(f)} ${data.bags.where((CoffeeBag b) => _matches(b, f)).length}'),
+                              label: Text('${_label(f)} ${found.where((CoffeeBag b) => _matches(b, f)).length}'),
                               selected: _filter == f,
                               onSelected: (_) => setState(() => _filter = f),
                             ),
@@ -95,10 +120,12 @@ class _BagsScreenState extends State<BagsScreen> {
                     hasScrollBody: false,
                     child: EmptyState(
                       icon: Icons.inventory_2_outlined,
-                      title: 'No bags here',
-                      message: 'Snap a photo of a bag and we fill in the details.',
-                      actionLabel: 'Add bag',
-                      onAction: _openAddBag,
+                      title: _search.isEmpty ? 'No bags here' : 'No bags match',
+                      message: _search.isEmpty
+                          ? 'Snap a photo of a bag and we fill in the details.'
+                          : (found.isEmpty ? 'Try another search or clear the filters.' : 'Matches are in another list — see the counts above.'),
+                      actionLabel: _search.isEmpty ? 'Add bag' : 'Clear search',
+                      onAction: _search.isEmpty ? _openAddBag : () => setState(() => _search = SearchFilters.none),
                     ),
                   )
                 else
