@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            b.brew_hash,\n            b.brew_datetime,\n            b.grind_setting,\n            b.rating,\n            cb.bag_hash,\n            cb.roaster\n           FROM brews b\n           LEFT JOIN coffee_bags cb ON b.coffee_bag_id = cb.id\n           WHERE b.coffee_bag_id = $2\n             AND b.user_id = $1\n             AND b.grind_setting IS NOT NULL\n           ORDER BY b.brew_datetime ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "brew_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "brew_datetime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "grind_setting",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "rating",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "bag_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "roaster",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "d988ba862c384b2ea5b0cb04998ecf01b66939fc9568b1ce67c1ca338bffdcf0"
+}

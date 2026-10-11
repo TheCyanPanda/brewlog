@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT rating, COUNT(*) as count\n           FROM brews\n           WHERE brew_datetime >= CURRENT_DATE AND rating IS NOT NULL\n           GROUP BY rating",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rating",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      null
+    ]
+  },
+  "hash": "9c8a97fd7de94ea9b46ea34aa32868b3df7adde32dffd03cb525c4daf5b6252b"
+}

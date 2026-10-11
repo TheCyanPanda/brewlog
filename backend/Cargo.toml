@@ -34,7 +34,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # request logging
-tower-http = { version = "0.5", features = ["cors", "trace"] }
+tower-http = { version = "0.5", features = ["cors", "trace", "fs"] }
 
 # Password hashing
 argon2 = { version = "0.5", features = ["alloc"] }
@@ -48,3 +48,5 @@ hex = "0.4"
 # Cryptographic random token generation
 rand = "0.8"
 
+# HTTP client for calling the Claude API (bag photo scan)
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

@@ -1,0 +1,142 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            b.id,\n            b.brew_hash,\n            b.brew_datetime,\n            b.rating,\n            b.grind_setting,\n            b.coffee_grams,\n            b.water_grams,\n            b.water_temp_c,\n            b.brew_time_secs,\n            b.filter_paper,\n            b.notes,\n            b.review,\n            cb.bag_hash,\n            cb.roaster,\n            cb.origin_country,\n            cb.origin_region,\n            cb.variety,\n            cb.process,\n            cb.roast_level,\n            g.name  AS grinder_name,\n            br.name AS brewer_name\n           FROM brews b\n           LEFT JOIN coffee_bags cb ON b.coffee_bag_id = cb.id\n           LEFT JOIN grinders g     ON b.grinder_id    = g.id\n           LEFT JOIN brewers  br    ON b.brewer_id      = br.id\n           WHERE b.user_id = $1\n           ORDER BY b.brew_datetime DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "brew_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "brew_datetime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "rating",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "grind_setting",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "coffee_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "water_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "water_temp_c",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "brew_time_secs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "filter_paper",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "review",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "bag_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "roaster",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "origin_country",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "origin_region",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "variety",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "process",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "roast_level",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "grinder_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "brewer_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "869a6675827e43880c69a7a19b541a2f1facd2dbdce3614f49fba4d64e37f763"
+}

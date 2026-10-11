@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT b.brew_hash, b.rating, b.grind_setting,\n                  b.coffee_grams, b.water_grams, b.water_temp_c,\n                  b.brew_time_secs, b.brew_datetime,\n                  cb.roaster, cb.origin_country\n           FROM brews b\n           LEFT JOIN coffee_bags cb ON b.coffee_bag_id = cb.id\n           ORDER BY b.brew_datetime DESC\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "brew_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "rating",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "grind_setting",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "coffee_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "water_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "water_temp_c",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "brew_time_secs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "brew_datetime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "roaster",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "origin_country",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "661a4c923c50bc70c84f72fada2052fec960c34b19fb300079e58111aef6c8cf"
+}

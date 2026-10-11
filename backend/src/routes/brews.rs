@@ -24,7 +24,7 @@ async fn list_brews(
     auth: AuthUser,
     Query(filter): Query<BrewFilter>,
 ) -> Result<Json<Vec<BrewResponse>>> {
-    let limit: i64 = filter.limit.unwrap_or(20).min(100); // LIMIT pgsql clause
+    let limit: i64 = filter.limit.unwrap_or(20).min(500); // LIMIT pgsql clause
     let offset: i64 = filter.offset.unwrap_or(0);
 
     // TODO: Avoid copied 'order_by' etc in each query: Make a parameterized function for
@@ -95,8 +95,8 @@ async fn create_brew(
         r#"INSERT INTO brews
             (user_id, coffee_bag_id, brew_datetime, grinder_id, grind_setting,
              brewer_id, filter_paper, coffee_grams, water_grams,
-             water_temp_c, brew_time_secs, brew_steps, rating, review, notes)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+             water_temp_c, brew_time_secs, brew_steps, rating, review, notes, recipe_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
            RETURNING *"#,
         auth.user_id,
         body.coffee_bag_id,
@@ -113,6 +113,7 @@ async fn create_brew(
         body.rating,
         body.review,
         body.notes,
+        body.recipe_id,
     )
     .fetch_one(&pool)
     .await?;

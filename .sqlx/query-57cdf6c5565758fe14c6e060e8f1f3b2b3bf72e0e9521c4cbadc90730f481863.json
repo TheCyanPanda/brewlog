@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM recipes\n        WHERE user_id = $1\n        ORDER BY is_default DESC, name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "brew_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "coffee_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "water_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "water_temp_c",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "brew_time_secs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "steps",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "source",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "is_default",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "57cdf6c5565758fe14c6e060e8f1f3b2b3bf72e0e9521c4cbadc90730f481863"
+}

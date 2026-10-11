@@ -1,0 +1,145 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO brews\n            (user_id, coffee_bag_id, brew_datetime, grinder_id, grind_setting,\n             brewer_id, filter_paper, coffee_grams, water_grams,\n             water_temp_c, brew_time_secs, brew_steps, rating, review, notes, recipe_id)\n           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)\n           RETURNING *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "brew_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "coffee_bag_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "brew_datetime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "grinder_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "grind_setting",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "brewer_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "filter_paper",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "coffee_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "water_grams",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 11,
+        "name": "water_temp_c",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 12,
+        "name": "brew_time_secs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "brew_steps",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 14,
+        "name": "rating",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "review",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 18,
+        "name": "recipe_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Timestamptz",
+        "Int4",
+        "Text",
+        "Int4",
+        "Text",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Int4",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "7ae9cac6adb563905231ca663eb7e373d6fc734156d38c9d3ad8286c02210420"
+}

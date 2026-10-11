@@ -1,0 +1,91 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE brewers SET\n            last_cleaned_at  = CASE WHEN $3 THEN now() ELSE last_cleaned_at END,\n            last_descaled_at = CASE WHEN $4 THEN now() ELSE last_descaled_at END\n        WHERE id = $2 AND user_id = $1\n        RETURNING *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "brew_method",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "brew_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "brand",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "model",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "purchased_at",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 10,
+        "name": "last_cleaned_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "last_descaled_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "83fb6036f3aa6fdba6b1cdb579c9af1b17b782649ba6e7f02989267d1c6fdfa9"
+}

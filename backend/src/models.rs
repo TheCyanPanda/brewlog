@@ -47,12 +47,15 @@ pub struct Grinder {
     pub name: String,
     pub notes: Option<String>,
     pub created_at: DateTime<Utc>,
+    pub purchased_at: Option<NaiveDate>,
+    pub last_cleaned_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateGrinder {
     pub name: String,
     pub notes: Option<String>,
+    pub purchased_at: Option<NaiveDate>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -66,6 +69,9 @@ pub struct Brewer {
     pub model: Option<String>,
     pub notes: Option<String>,
     pub created_at: DateTime<Utc>,
+    pub purchased_at: Option<NaiveDate>,
+    pub last_cleaned_at: Option<DateTime<Utc>>,
+    pub last_descaled_at: Option<DateTime<Utc>>,
 }
 
 
@@ -77,6 +83,14 @@ pub struct CreateBrewer {
     pub brand: Option<String>,
     pub model: Option<String>,
     pub notes: Option<String>,
+    pub purchased_at: Option<NaiveDate>,
+}
+
+// Body for POST /grinders/:id/maintenance and /brewers/:id/maintenance
+// action: 'cleaned' | 'descaled' (descaled only applies to brewers)
+#[derive(Debug, Deserialize)]
+pub struct Maintenance {
+    pub action: String,
 }
 
 // ====== Coffee bags ======
@@ -103,6 +117,10 @@ pub struct CoffeeBag {
     pub batch_id: Option<String>,
     pub image_path: Option<String>,
     pub created_at: DateTime<Utc>,
+    pub status: String,             // unopened, opened, finished
+    pub favorite: bool,
+    pub rating: Option<String>,     // the bag's own rating, separate from each brew
+    pub buy_url: Option<String>,
 }
 
 
@@ -122,6 +140,10 @@ pub struct CreateCoffeeBag {
     pub roast_date: Option<NaiveDate>,
     pub caffeine_free: Option<bool>,
     pub batch_id: Option<String>,
+    pub status: Option<String>,     // defaults to 'opened'
+    pub favorite: Option<bool>,
+    pub rating: Option<String>,
+    pub buy_url: Option<String>,
 }
 
 // ====== Brews
@@ -145,7 +167,8 @@ pub struct Brew {
     pub rating: Option<String>,
     pub review: Option<String>,
     pub notes: Option<String>,
-    pub created_at: DateTime<Utc>
+    pub created_at: DateTime<Utc>,
+    pub recipe_id: Option<i32>,
 }
 
 impl Brew {
@@ -181,6 +204,7 @@ pub struct CreateBrew {
     pub brew_time_secs: Option<i32>,  // pass as seconds; UI converts mm:ss → seconds
 
     pub brew_steps: Option<serde_json::Value>,
+    pub recipe_id: Option<i32>,
 
     pub rating: Option<String>,
     pub review: Option<String>,
@@ -204,6 +228,39 @@ impl From<Brew> for BrewResponse {
         let brew_time_display = brew.brew_time_display();
         Self { brew, ratio, water_temp_f, brew_time_display }
     }
+}
+
+// ====== Recipes
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct Recipe {
+    pub id: i32,
+    pub user_id: i32,
+    pub name: String,
+    pub brew_type: Option<String>,
+    pub coffee_grams: Option<f64>,
+    pub water_grams: Option<f64>,
+    pub water_temp_c: Option<f64>,
+    pub brew_time_secs: Option<i32>,
+    pub steps: Option<serde_json::Value>,
+    pub notes: Option<String>,
+    pub source: Option<String>,
+    pub is_default: bool,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateRecipe {
+    pub name: String,
+    pub brew_type: Option<String>,
+    pub coffee_grams: Option<f64>,
+    pub water_grams: Option<f64>,
+    pub water_temp_c: Option<f64>,
+    pub brew_time_secs: Option<i32>,
+    pub steps: Option<serde_json::Value>,
+    pub notes: Option<String>,
+    pub source: Option<String>,
+    pub is_default: Option<bool>,
 }
 
 // Query filters

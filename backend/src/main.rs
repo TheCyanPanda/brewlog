@@ -9,6 +9,7 @@ mod auth;
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
+use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -28,6 +29,8 @@ async fn main() -> anyhow::Result<()> {
         .expect("DATABASE_URL must be set in .env");
     let host = std::env::var("SERVER_HOST").unwrap_or("0.0.0.0".into());
     let port = std::env::var("SERVER_PORT").unwrap_or("3000".into());
+    // Output of `flutter build web` — served as static files for the PWA
+    let web_dir = std::env::var("WEB_DIR").unwrap_or("mobile/build/web".into());
 
     info!("Connecting to database...");
     let pool = PgPoolOptions::new()  // Pool: Let's multiple requests use the DB simultaneously
@@ -43,14 +46,18 @@ async fn main() -> anyhow::Result<()> {
         .merge(routes::coffee_bags::router()) // /GET/POST/PUT/DELETE /bags
         .merge(routes::brews::router())  // /GET/POST/DELETE /brews
         .merge(routes::equipment::router()) // GET/POST /grinders and /brewers
+        .merge(routes::recipes::router()) // GET/POST/DELETE /recipes
+        .merge(routes::scan::router()) // POST /bags/scan (Claude vision)
         .merge(routes::export::router()) // GET /export | /analytics
         .merge(routes::ha::router()) // Home assistant
+        .fallback_service(ServeDir::new(&web_dir)) // Flutter web build (PWA), same origin as the API
         .layer(CorsLayer::permissive()) // Allow android app to connect
         .layer(TraceLayer::new_for_http())  // Log all requests
         .with_state(pool);  // Make available to handlers
 
     let addr: String = format!("{}:{}", host, port);
     info!("Coffeelog server listening on http://{}", addr);
+    info!("Serving web app from {}", web_dir);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, app).await?;

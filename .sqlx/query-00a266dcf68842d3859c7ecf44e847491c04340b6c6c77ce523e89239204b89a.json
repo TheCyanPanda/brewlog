@@ -1,0 +1,156 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE coffee_bags SET bag_hash = $2 WHERE id = $3 AND user_id = $1\n        RETURNING *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "bag_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "roaster",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "roaster_origin_city",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "roaster_origin_country",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "origin_country",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "origin_region",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "roast_level",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "variety",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "process",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "taste_notes",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 12,
+        "name": "bean_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "harvest_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 14,
+        "name": "roast_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 15,
+        "name": "caffeine_free",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "batch_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "image_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 19,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "favorite",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 21,
+        "name": "rating",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 22,
+        "name": "buy_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "00a266dcf68842d3859c7ecf44e847491c04340b6c6c77ce523e89239204b89a"
+}

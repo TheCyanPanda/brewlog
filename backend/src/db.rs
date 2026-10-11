@@ -97,8 +97,8 @@ impl From<BrewQueryRow> for BrewExport {
     }
 }
 
-// Fetch all brews with related data joined (DESC, newest first)
-pub async fn all_brews_export(pool: &PgPool) -> Result<Vec<BrewExport>> {
+// Fetch all of a user's brews with related data joined (DESC, newest first)
+pub async fn all_brews_export(pool: &PgPool, user_id: i32) -> Result<Vec<BrewExport>> {
     let rows: Vec<BrewQueryRow> = sqlx::query_as!(
         BrewQueryRow,
         r#"SELECT
@@ -127,7 +127,9 @@ pub async fn all_brews_export(pool: &PgPool) -> Result<Vec<BrewExport>> {
            LEFT JOIN coffee_bags cb ON b.coffee_bag_id = cb.id
            LEFT JOIN grinders g     ON b.grinder_id    = g.id
            LEFT JOIN brewers  br    ON b.brewer_id      = br.id
-           ORDER BY b.brew_datetime DESC"#
+           WHERE b.user_id = $1
+           ORDER BY b.brew_datetime DESC"#,
+        user_id
     )
     .fetch_all(pool)
     .await?;
@@ -188,7 +190,7 @@ pub struct GrindDataPoint {
 
 // Fetch grind settings and ratings for a specific bag.
 // The mobile app uses this to plot grind vs rating over time.
-pub async fn grind_analytics(pool: &PgPool, coffee_bag_id: i32) -> Result<Vec<GrindDataPoint>> {
+pub async fn grind_analytics(pool: &PgPool, user_id: i32, coffee_bag_id: i32) -> Result<Vec<GrindDataPoint>> {
     let rows = sqlx::query!(
         r#"SELECT
             b.brew_hash,
@@ -199,10 +201,11 @@ pub async fn grind_analytics(pool: &PgPool, coffee_bag_id: i32) -> Result<Vec<Gr
             cb.roaster
            FROM brews b
            LEFT JOIN coffee_bags cb ON b.coffee_bag_id = cb.id
-           WHERE b.coffee_bag_id = $1
+           WHERE b.coffee_bag_id = $2
+             AND b.user_id = $1
              AND b.grind_setting IS NOT NULL
            ORDER BY b.brew_datetime ASC"#,
-        coffee_bag_id
+        user_id, coffee_bag_id
     )
     .fetch_all(pool)
     .await?;

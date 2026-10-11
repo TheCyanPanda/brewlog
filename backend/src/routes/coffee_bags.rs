@@ -50,7 +50,9 @@ async fn create_bag(
        (user_id, roaster, roaster_origin_city, roaster_origin_country,
        origin_country, origin_region, roast_level, variety, process,
        taste_notes, bean_type, harvest_date, roast_date, caffeine_free,
-       batch_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       batch_id, status, favorite, rating, buy_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
+               COALESCE($16, 'opened'), $17, $18, $19)
        RETURNING *"#,
     auth.user_id,
     body.roaster,
@@ -67,6 +69,10 @@ async fn create_bag(
     body.roast_date,
     body.caffeine_free.unwrap_or(false),
     body.batch_id,
+    body.status,
+    body.favorite.unwrap_or(false),
+    body.rating,
+    body.buy_url,
     )
     .fetch_one(&pool)
     .await?;
@@ -121,7 +127,9 @@ async fn update_bag(
             origin_country = $5, origin_region = $6, variety = $7, process = $8,
             taste_notes = $9, bean_type = $10, roast_level = $11,
             harvest_date = $12, roast_date = $13,
-            caffeine_free = $14, batch_id = $15
+            caffeine_free = $14, batch_id = $15,
+            status = COALESCE($17, status), favorite = COALESCE($18, favorite),
+            rating = $19, buy_url = $20
            WHERE id = $16 AND user_id = $1
            RETURNING *"#,
         auth.user_id,
@@ -130,7 +138,8 @@ async fn update_bag(
         body.taste_notes.as_deref(), body.bean_type, body.roast_level,
         body.harvest_date, body.roast_date,
         body.caffeine_free.unwrap_or(false), body.batch_id,
-        id
+        id,
+        body.status, body.favorite, body.rating, body.buy_url,
     )
     .fetch_optional(&pool)
     .await?

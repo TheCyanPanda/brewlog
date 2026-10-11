@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE recipes SET is_default = false WHERE user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ef4ec6fa481d4e8f0c63f4aefad0f8f5b0a31e34719a346b51c1de6653edb92c"
+}
