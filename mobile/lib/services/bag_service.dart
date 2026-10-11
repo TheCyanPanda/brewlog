@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import '../models/coffee_bag.dart';
 
@@ -19,7 +21,6 @@ class BagService {
   // POST /bags
   /* TODO: Add option to make originCountry take multuple counties  (everyone
   does not only drink single origin, hey!) */
-  /* TODO: Add option to add image of bag */
   Future<CoffeeBag> createBag({
     required String roaster,
     String? roasterOriginCity,
@@ -67,6 +68,30 @@ class BagService {
     final Response<Map<String, dynamic>> response =
         await _dio.put<Map<String, dynamic>>('/bags/$id', data: body);
     return CoffeeBag.fromJson(response.data!);
+  }
+
+  // GET /bags/photos — ids of bags that have a photo
+  Future<Set<int>> listPhotoIds() async {
+    final Response<List<dynamic>> response = await _dio.get<List<dynamic>>('/bags/photos');
+    return (response.data ?? <dynamic>[]).cast<int>().toSet();
+  }
+
+  // GET /bags/:id/photo — raw image bytes
+  Future<Uint8List> getPhoto(int id) async {
+    final Response<List<int>> response = await _dio.get<List<int>>(
+      '/bags/$id/photo',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return Uint8List.fromList(response.data!);
+  }
+
+  // PUT /bags/:id/photo — raw image bytes with their Content-Type
+  Future<void> putPhoto(int id, Uint8List bytes, String mediaType) async {
+    await _dio.put<void>(
+      '/bags/$id/photo',
+      data: Stream<List<int>>.value(bytes),
+      options: Options(contentType: mediaType, headers: <String, Object>{Headers.contentLengthHeader: bytes.length}),
+    );
   }
 
   // Backend expects plain dates: "2026-09-21"

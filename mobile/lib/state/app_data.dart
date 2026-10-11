@@ -18,6 +18,8 @@ class AppData extends ChangeNotifier {
   List<Grinder> grinders = <Grinder>[];
   List<Brewer> brewers = <Brewer>[];
   List<Recipe> recipes = <Recipe>[];
+  Set<int> bagPhotoIds = <int>{}; // bags that have a photo on the server
+  final Map<int, Future<Uint8List?>> _bagPhotos = <int, Future<Uint8List?>>{};
 
   bool isLoading = false;
   bool isLoaded = false;
@@ -40,6 +42,7 @@ class AppData extends ChangeNotifier {
       grinders = r[2] as List<Grinder>;
       brewers = r[3] as List<Brewer>;
       recipes = r[4] as List<Recipe>;
+      bagPhotoIds = await services.bags.listPhotoIds().catchError((Object _) => <int>{});
       isLoaded = true;
     } catch (e) {
       error = e;
@@ -55,6 +58,8 @@ class AppData extends ChangeNotifier {
     grinders = <Grinder>[];
     brewers = <Brewer>[];
     recipes = <Recipe>[];
+    bagPhotoIds = <int>{};
+    _bagPhotos.clear();
     isLoaded = false;
     notifyListeners();
   }
@@ -175,6 +180,22 @@ class AppData extends ChangeNotifier {
     bags = bags.map((CoffeeBag x) => x.id == updated.id ? updated : x).toList();
     notifyListeners();
     return updated;
+  }
+
+  /// The bag's photo, fetched once and kept in memory. Null if it has none (or fails to load).
+  Future<Uint8List?>? bagPhoto(int bagId) {
+    if (!bagPhotoIds.contains(bagId)) return null;
+    return _bagPhotos.putIfAbsent(
+      bagId,
+      () => services.bags.getPhoto(bagId).then<Uint8List?>((Uint8List b) => b).catchError((Object _) => null),
+    );
+  }
+
+  Future<void> setBagPhoto(int bagId, Uint8List bytes, String mediaType) async {
+    await services.bags.putPhoto(bagId, bytes, mediaType);
+    _bagPhotos[bagId] = Future<Uint8List?>.value(bytes);
+    bagPhotoIds = <int>{...bagPhotoIds, bagId};
+    notifyListeners();
   }
 
   void addGrinderLocal(Grinder g) {

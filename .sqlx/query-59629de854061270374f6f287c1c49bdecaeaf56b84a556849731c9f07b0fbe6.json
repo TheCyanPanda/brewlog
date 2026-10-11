@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.media_type, p.data FROM bag_photos p\n           JOIN coffee_bags b ON b.id = p.bag_id\n           WHERE p.bag_id = $1 AND b.user_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "media_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "data",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "59629de854061270374f6f287c1c49bdecaeaf56b84a556849731c9f07b0fbe6"
+}

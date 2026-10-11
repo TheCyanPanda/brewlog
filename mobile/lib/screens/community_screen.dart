@@ -179,14 +179,6 @@ class _InspirationCard extends StatelessWidget {
   }
 }
 
-const List<List<Color>> _photoGradients = <List<Color>>[
-  <Color>[Color(0xFF6B4226), Color(0xFF2B1A10)],
-  <Color>[Color(0xFF4E3B5C), Color(0xFF1E1624)],
-  <Color>[Color(0xFF8A5A2E), Color(0xFF33200F)],
-  <Color>[Color(0xFF3F5A4A), Color(0xFF16201A)],
-  <Color>[Color(0xFF5C3A2E), Color(0xFF241510)],
-];
-
 class _FeedPostCard extends StatefulWidget {
   final FeedPost post;
   final AppData data;
@@ -222,7 +214,6 @@ class _FeedPostCardState extends State<_FeedPostCard> {
   Widget build(BuildContext context) {
     final FeedPost p = widget.post;
     final ThemeData theme = Theme.of(context);
-    final List<Color> gradient = _photoGradients[p.photoHue % _photoGradients.length];
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -259,39 +250,38 @@ class _FeedPostCardState extends State<_FeedPostCard> {
             ),
           ),
 
-          // Photo / clip placeholder
-          Container(
-            height: 176,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-            ),
-            child: Stack(
-              children: <Widget>[
-                Center(child: Icon(Icons.coffee_rounded, size: 64, color: Colors.white.withValues(alpha: 0.18))),
-                if (p.videoLength != null)
-                  Positioned(
-                    left: 12,
-                    bottom: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.55),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          const Icon(Icons.play_arrow_rounded, size: 16, color: Colors.white),
-                          const SizedBox(width: 2),
-                          Text(p.videoLength!, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-                        ],
+          // Photo (with a clip badge when the post has a short video)
+          if (p.photo != null)
+            SizedBox(
+              height: 260,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  Image.asset(p.photo!, fit: BoxFit.cover),
+                  if (p.videoLength != null)
+                    Positioned(
+                      left: 12,
+                      bottom: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            const Icon(Icons.play_arrow_rounded, size: 16, color: Colors.white),
+                            const SizedBox(width: 2),
+                            Text(p.videoLength!, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
 
           // Coffee
           Padding(

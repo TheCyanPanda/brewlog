@@ -48,6 +48,7 @@ async fn main() -> anyhow::Result<()> {
         .merge(routes::equipment::router()) // GET/POST /grinders and /brewers
         .merge(routes::recipes::router()) // GET/POST/DELETE /recipes
         .merge(routes::scan::router()) // POST /bags/scan (Claude vision)
+        .merge(routes::bag_photos::router()) // GET/PUT /bags/:id/photo
         .merge(routes::export::router()) // GET /export | /analytics
         .merge(routes::ha::router()) // Home assistant
         .fallback_service(ServeDir::new(&web_dir)) // Flutter web build (PWA), same origin as the API

@@ -34,7 +34,7 @@ class _AddBagSheetState extends State<AddBagSheet> {
   bool _isSaving = false;
 
   // Scan state
-  Uint8List? _photo;
+  PickedImage? _photo; // also saved as the bag's photo
   bool _scanning = false;
   bool? _scanWasDemo;
 
@@ -62,7 +62,7 @@ class _AddBagSheetState extends State<AddBagSheet> {
     if (image == null || !mounted) return;
 
     setState(() {
-      _photo = image!.bytes;
+      _photo = image;
       _scanning = true;
       _scanWasDemo = null;
     });
@@ -140,6 +140,14 @@ class _AddBagSheetState extends State<AddBagSheet> {
         status: _opened ? 'opened' : 'unopened',
       );
       widget.data.addBagLocal(bag);
+      final PickedImage? photo = _photo;
+      if (photo != null) {
+        try {
+          await widget.data.setBagPhoto(bag.id, photo.bytes, photo.mediaType);
+        } on DioException {
+          // The bag is saved; the photo can be added later from the bag page
+        }
+      }
       if (mounted) Navigator.pop(context, bag);
     } on DioException catch (e) {
       if (mounted) showSnack(context, 'Failed: ${e.message}');
@@ -161,7 +169,7 @@ class _AddBagSheetState extends State<AddBagSheet> {
           children: <Widget>[
             Text('New bag', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            _ScanCard(photo: _photo, scanning: _scanning, demo: _scanWasDemo, onScan: _scanning ? null : _scan),
+            _ScanCard(photo: _photo?.bytes, scanning: _scanning, demo: _scanWasDemo, onScan: _scanning ? null : _scan),
             const SizedBox(height: 20),
             TextField(
               controller: _roasterController,

@@ -5,6 +5,7 @@ import '../services/insights.dart';
 import '../state/app_data.dart';
 import '../theme.dart';
 import '../utils/format.dart';
+import 'bag_photo.dart';
 import 'common.dart';
 
 class BagCard extends StatelessWidget {
@@ -28,7 +29,7 @@ class BagCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              _BagIcon(bag: bag),
+              BagPhoto(data: data, bag: bag),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -83,31 +84,6 @@ class BagCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-// Colored "bag" tile with the roaster code (MCR, DC, …)
-class _BagIcon extends StatelessWidget {
-  final CoffeeBag bag;
-  const _BagIcon({required this.bag});
-
-  @override
-  Widget build(BuildContext context) {
-    final String code = (bag.bagHash ?? '').split('-').first;
-    final Color c = BrewColors.series[(bag.roaster ?? '').hashCode.abs() % BrewColors.series.length];
-    return Container(
-      width: 44,
-      height: 52,
-      decoration: BoxDecoration(
-        color: c.withValues(alpha: 0.18),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(8), bottom: Radius.circular(12)),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        code.isEmpty ? '☕' : code,
-        style: TextStyle(color: c, fontWeight: FontWeight.w800, fontSize: code.length > 3 ? 10.5 : 12.5),
       ),
     );
   }

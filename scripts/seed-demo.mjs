@@ -71,13 +71,13 @@ const RECIPES = [
 // days: brewing window (days ago, from → to). opt: grind/temp that give the best cup.
 const BAGS = [
   { roaster: 'Morgon Coffee Roasters', roaster_origin_city: 'Gothenburg', origin_country: 'Ethiopia', origin_region: 'Yirgacheffe', process: 'Washed', variety: 'Heirloom', roast_level: 'Light', taste_notes: ['blueberry', 'jasmine', 'bergamot'], roastAgo: 98, days: [88, 72], status: 'finished', rating: 'excellent', favorite: true, method: 'filter', optGrind: 4.5, optTemp: 93 },
-  { roaster: 'Drop Coffee', roaster_origin_city: 'Stockholm', origin_country: 'Kenya', origin_region: 'Nyeri', process: 'Washed', variety: 'SL28', roast_level: 'Light', taste_notes: ['blackcurrant', 'grapefruit', 'cane sugar'], roastAgo: 80, days: [71, 59], status: 'finished', rating: 'good', method: 'filter', optGrind: 4.2, optTemp: 94 },
+  { roaster: 'Austrått Kaffebrenneri', roaster_origin_country: 'Norway', origin_country: 'Peru', origin_region: 'Cusco', process: 'Washed', variety: 'Bourbon', roast_level: 'Medium', taste_notes: ['baking chocolate', 'hazelnut', 'caramel'], photo: 'austratt.jpg', roastAgo: 80, days: [71, 59], status: 'finished', rating: 'good', method: 'filter', optGrind: 4.2, optTemp: 94 },
   { roaster: 'Da Matteo', roaster_origin_city: 'Gothenburg', origin_country: 'Colombia', origin_region: 'Huila', process: 'Washed', variety: 'Caturra', roast_level: 'Medium', taste_notes: ['caramel', 'red apple', 'milk chocolate'], roastAgo: 66, days: [58, 46], status: 'finished', rating: 'good', method: 'filter', optGrind: 4.8, optTemp: 91 },
-  { roaster: "Muttley & Jack's", roaster_origin_city: 'Vaxholm', origin_country: 'Kenya', origin_region: 'Kirinyaga', process: 'Washed', variety: 'SL28, SL34', roast_level: 'Light', taste_notes: ['blackberry', 'hibiscus', 'lime'], roastAgo: 52, days: [45, 31], status: 'finished', rating: 'excellent', favorite: true, method: 'filter', optGrind: 4.3, optTemp: 94 },
-  { roaster: 'Standout Coffee', roaster_origin_city: 'Stockholm', origin_country: 'Ethiopia', origin_region: 'Guji', process: 'Natural', variety: 'Heirloom', roast_level: 'Light', taste_notes: ['strawberry', 'dark chocolate', 'red wine'], roastAgo: 36, days: [30, 16], status: 'finished', rating: 'good', method: 'filter', optGrind: 4.7, optTemp: 92 },
+  { roaster: "Muttley & Jack's", roaster_origin_city: 'Vaxholm', origin_country: 'DR Congo', origin_region: 'Kivu', process: 'Washed', variety: 'Red Bourbon', roast_level: 'Light', taste_notes: ['cranberry', 'red apple', 'lemon'], photo: 'amka.jpg', roastAgo: 52, days: [45, 31], status: 'finished', rating: 'excellent', favorite: true, method: 'filter', optGrind: 4.3, optTemp: 94 },
+  { roaster: 'Langøra', roaster_origin_city: 'Trøndelag', roaster_origin_country: 'Norway', origin_country: 'Ethiopia', origin_region: 'Magarissa', process: 'Natural', variety: 'Heirloom', roast_level: 'Light', taste_notes: ['yellow stone fruit', 'pineapple', 'citrus'], photo: 'langora.jpg', roastAgo: 36, days: [30, 16], status: 'finished', rating: 'good', method: 'filter', optGrind: 4.7, optTemp: 92 },
   { roaster: 'Kafferäven', roaster_origin_city: 'Gothenburg', origin_country: 'Brazil', origin_region: 'Cerrado', process: 'Natural', variety: 'Yellow Bourbon', roast_level: 'Medium-dark', taste_notes: ['hazelnut', 'cocoa', 'brown sugar'], roastAgo: 26, days: [22, 1], status: 'opened', rating: 'ok', method: 'espresso', optGrind: 8, optTemp: 93 },
   { roaster: 'Johan & Nyström', roaster_origin_city: 'Tullinge', origin_country: 'Rwanda', origin_region: 'Nyamasheke', process: 'Washed', variety: 'Red Bourbon', roast_level: 'Light', taste_notes: ['red currant', 'black tea', 'orange'], roastAgo: 19, days: [14, 0], status: 'opened', method: 'filter', optGrind: 4.4, optTemp: 93 },
-  { roaster: 'Gringo Nordic', roaster_origin_city: 'Gothenburg', origin_country: 'Panama', origin_region: 'Boquete', process: 'Washed', variety: 'Gesha', roast_level: 'Light', taste_notes: ['jasmine', 'peach', 'honey'], roastAgo: 4, days: null, status: 'unopened', method: 'filter' },
+  { roaster: 'Pala', roaster_origin_country: 'Norway', origin_country: 'Ethiopia', origin_region: 'Gedeb, Yirgacheffe', process: 'Natural', variety: 'Welisho, Dega', roast_level: 'Light', taste_notes: ['mango', 'cantaloupe', 'citrus'], photo: 'pala.jpg', roastAgo: 4, days: null, status: 'unopened', method: 'filter' },
 ];
 
 const REVIEWS = {
@@ -108,6 +108,16 @@ function review(rating, notes) {
 }
 
 // ---- Seeding ----
+
+// Real bag photos (scripts/demo-photos), sent as raw JPEG like the app does
+async function uploadPhoto(bagId, file) {
+  const res = await fetch(`${BASE}/bags/${bagId}/photo`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'image/jpeg', Authorization: `Bearer ${token}` },
+    body: readFileSync(new URL(`demo-photos/${file}`, import.meta.url)),
+  });
+  if (!res.ok) throw new Error(`PUT /bags/${bagId}/photo -> ${res.status} ${await res.text()}`);
+}
 
 function databaseUrl() {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
@@ -164,11 +174,12 @@ async function main() {
   for (const { key, ...r } of RECIPES) recipes[key] = await api('POST', '/recipes', r);
 
   let brewCount = 0;
+  let photoCount = 0;
   for (const b of BAGS) {
     const bag = await api('POST', '/bags', {
       roaster: b.roaster,
       roaster_origin_city: b.roaster_origin_city,
-      roaster_origin_country: 'Sweden',
+      roaster_origin_country: b.roaster_origin_country ?? 'Sweden',
       origin_country: b.origin_country,
       origin_region: b.origin_region,
       roast_level: b.roast_level,
@@ -181,6 +192,10 @@ async function main() {
       favorite: b.favorite ?? false,
       buy_url: null,
     });
+    if (b.photo) {
+      await uploadPhoto(bag.id, b.photo);
+      photoCount++;
+    }
     if (!b.days) continue;
 
     // Brew roughly every day (sometimes twice) through the bag's window, oldest first,
@@ -235,7 +250,7 @@ async function main() {
     }
   }
 
-  console.log(`Seeded ${GRINDERS.length} grinders, ${BREWERS.length} brewers, ${RECIPES.length} recipes, ${BAGS.length} bags, ${brewCount} brews.`);
+  console.log(`Seeded ${GRINDERS.length} grinders, ${BREWERS.length} brewers, ${RECIPES.length} recipes, ${BAGS.length} bags (${photoCount} with photos), ${brewCount} brews.`);
   console.log('Log in with demo / demo1234');
 }
 

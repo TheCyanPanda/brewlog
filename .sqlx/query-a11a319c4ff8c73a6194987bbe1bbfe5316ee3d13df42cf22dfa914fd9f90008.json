@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO bag_photos (bag_id, media_type, data)\n           SELECT id, $3, $4 FROM coffee_bags WHERE id = $1 AND user_id = $2\n           ON CONFLICT (bag_id) DO UPDATE\n               SET media_type = EXCLUDED.media_type, data = EXCLUDED.data, updated_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a11a319c4ff8c73a6194987bbe1bbfe5316ee3d13df42cf22dfa914fd9f90008"
+}

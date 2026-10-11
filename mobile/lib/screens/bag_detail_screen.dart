@@ -6,10 +6,12 @@ import '../models/brew_draft.dart';
 import '../models/coffee_bag.dart';
 import '../models/equipment.dart';
 import '../services/insights.dart';
+import '../services/picker/image_picker.dart';
 import '../state/app_data.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../utils/url/open_url.dart';
+import '../widgets/bag_photo.dart';
 import '../widgets/charts.dart';
 import '../widgets/common.dart';
 import 'brew_detail_screen.dart';
@@ -29,6 +31,22 @@ class BagDetailScreen extends StatelessWidget {
       await data.updateBag(b, status: status, favorite: favorite, rating: rating);
     } on DioException catch (e) {
       if (context.mounted) showSnack(context, 'Could not update bag: ${e.message}');
+    }
+  }
+
+  Future<void> _setPhoto(BuildContext context, CoffeeBag b) async {
+    final PickedImage? image;
+    try {
+      image = await pickImage();
+    } on UnsupportedError catch (e) {
+      if (context.mounted) showSnack(context, e.message ?? 'Not supported');
+      return;
+    }
+    if (image == null) return;
+    try {
+      await data.setBagPhoto(b.id, image.bytes, image.mediaType);
+    } on DioException catch (e) {
+      if (context.mounted) showSnack(context, 'Could not save photo: ${e.message}');
     }
   }
 
@@ -67,8 +85,12 @@ class BagDetailScreen extends StatelessWidget {
                 onPressed: () => _update(context, b, favorite: !b.favorite),
               ),
               PopupMenuButton<String>(
-                onSelected: (String s) => _update(context, b, status: s),
+                onSelected: (String s) => s == 'photo' ? _setPhoto(context, b) : _update(context, b, status: s),
                 itemBuilder: (_) => <PopupMenuEntry<String>>[
+                  PopupMenuItem<String>(
+                    value: 'photo',
+                    child: Text(data.bagPhotoIds.contains(b.id) ? 'Change photo' : 'Add photo'),
+                  ),
                   if (b.status != 'finished') const PopupMenuItem<String>(value: 'finished', child: Text('Mark as finished')),
                   if (b.status != 'opened') const PopupMenuItem<String>(value: 'opened', child: Text('Mark as opened')),
                 ],
@@ -88,6 +110,17 @@ class BagDetailScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.only(bottom: 24),
             children: <Widget>[
+              if (data.bagPhotoIds.contains(b.id))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  child: BagPhoto(
+                    data: data,
+                    bag: b,
+                    width: double.infinity,
+                    height: 280,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
               // Hero
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),

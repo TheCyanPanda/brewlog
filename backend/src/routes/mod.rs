@@ -6,3 +6,4 @@ pub mod export;
 pub mod auth;
 pub mod recipes;
 pub mod scan;
+pub mod bag_photos;

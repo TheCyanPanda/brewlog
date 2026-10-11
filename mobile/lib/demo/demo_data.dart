@@ -35,7 +35,7 @@ class FeedPost {
   final int likes;
   final int comments;
   final String? videoLength; // "0:12" when the post has a short clip
-  final int photoHue;        // index into the gradient palette
+  final String? photo;       // asset image of the cup/setup, null = text-only post
 
   const FeedPost({
     required this.author,
@@ -62,7 +62,7 @@ class FeedPost {
     required this.likes,
     required this.comments,
     this.videoLength,
-    this.photoHue = 0,
+    this.photo,
   });
 
   double get ratio => waterGrams / coffeeGrams;
@@ -108,7 +108,7 @@ const List<FeedPost> kFeedPosts = <FeedPost>[
     likes: 14,
     comments: 3,
     videoLength: '0:12',
-    photoHue: 0,
+    photo: 'assets/feed/pourover.jpg',
   ),
   FeedPost(
     author: 'Bryggare_92',
@@ -133,7 +133,7 @@ const List<FeedPost> kFeedPosts = <FeedPost>[
     brewId: 'HKR-0017-B002',
     likes: 31,
     comments: 6,
-    photoHue: 1,
+    photo: 'assets/feed/cup.jpg',
   ),
   FeedPost(
     author: 'Anna Lindqvist',
@@ -157,7 +157,7 @@ const List<FeedPost> kFeedPosts = <FeedPost>[
     brewId: 'FR-0009-B005',
     likes: 22,
     comments: 4,
-    photoHue: 2,
+    photo: 'assets/feed/latte.jpg',
   ),
   FeedPost(
     author: 'Jonas Berg',
@@ -184,7 +184,7 @@ const List<FeedPost> kFeedPosts = <FeedPost>[
     likes: 57,
     comments: 12,
     videoLength: '0:08',
-    photoHue: 3,
+    photo: 'assets/feed/setup.jpg',
   ),
   FeedPost(
     author: 'Mika S',
@@ -210,7 +210,6 @@ const List<FeedPost> kFeedPosts = <FeedPost>[
     brewId: 'HKR-0022-B001',
     likes: 5,
     comments: 2,
-    photoHue: 4,
   ),
 ];
 
