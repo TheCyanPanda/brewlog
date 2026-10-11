@@ -96,20 +96,17 @@ class _BagsScreenState extends State<BagsScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 48,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: <Widget>[
                         for (final _BagFilter f in _BagFilter.values)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text('${_label(f)} ${found.where((CoffeeBag b) => _matches(b, f)).length}'),
-                              selected: _filter == f,
-                              onSelected: (_) => setState(() => _filter = f),
-                            ),
+                          ChoiceChip(
+                            label: Text('${_label(f)} ${found.where((CoffeeBag b) => _matches(b, f)).length}'),
+                            selected: _filter == f,
+                            onSelected: (_) => setState(() => _filter = f),
                           ),
                       ],
                     ),

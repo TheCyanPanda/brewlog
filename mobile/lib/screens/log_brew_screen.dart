@@ -17,6 +17,7 @@ import '../state/app_data.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/add_bag_sheet.dart';
+import '../widgets/chip_scroller.dart';
 import '../widgets/common.dart';
 
 class LogBrewScreen extends StatefulWidget {
@@ -332,24 +333,21 @@ class _LogBrewScreenState extends State<LogBrewScreen> {
 
           // 1. Which coffee
           const SectionHeader('Coffee', padding: EdgeInsets.fromLTRB(20, 12, 12, 8)),
-          SizedBox(
+          ChipScroller(
             height: 92,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: <Widget>[
-                for (final CoffeeBag b in _bagChoices(bag))
-                  _BagChip(
-                    bag: b,
-                    selected: b.id == _bagId,
-                    onTap: () => setState(() {
-                      _bagId = b.id;
-                      _applyDefaultsForBag(b.id);
-                    }),
-                  ),
-                _AddChip(onTap: _addBag),
-              ],
-            ),
+            spacing: 10,
+            children: <Widget>[
+              for (final CoffeeBag b in _bagChoices(bag))
+                _BagChip(
+                  bag: b,
+                  selected: b.id == _bagId,
+                  onTap: () => setState(() {
+                    _bagId = b.id;
+                    _applyDefaultsForBag(b.id);
+                  }),
+                ),
+              _AddChip(onTap: _addBag),
+            ],
           ),
 
           // 2. Setup: brewer · grinder · recipe (pre-selected, tap to change)
@@ -552,7 +550,7 @@ class _LogBrewScreenState extends State<LogBrewScreen> {
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 title: const Text('More details', style: TextStyle(fontWeight: FontWeight.w600)),
-                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                childrenPadding: const EdgeInsets.fromLTRB(12, 10, 12, 8), // room for the floating label
                 children: <Widget>[
                   TextFormField(
                     initialValue: _filterPaper,
@@ -609,46 +607,43 @@ class _BagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final int? rest = bag.daysSinceRoast;
-    return Padding(
-      padding: const EdgeInsets.only(right: 10),
-      child: Material(
-        color: selected ? BrewColors.caramel.withValues(alpha: 0.16) : BrewColors.card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: selected ? BrewColors.caramel : Colors.transparent, width: 1.5),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Container(
-            width: 168,
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  bag.originCountry ?? bag.roaster ?? 'Bag',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  bag.originRegion ?? bag.process ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: BrewColors.text, fontSize: 12.5),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${bag.roaster ?? ''}${rest == null ? '' : ' · $rest d'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: BrewColors.muted, fontSize: 12),
-                ),
-              ],
-            ),
+    return Material(
+      color: selected ? BrewColors.caramel.withValues(alpha: 0.16) : BrewColors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: selected ? BrewColors.caramel : Colors.transparent, width: 1.5),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          width: 168,
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                bag.originCountry ?? bag.roaster ?? 'Bag',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                bag.originRegion ?? bag.process ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: BrewColors.text, fontSize: 12.5),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${bag.roaster ?? ''}${rest == null ? '' : ' · $rest d'}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: BrewColors.muted, fontSize: 12),
+              ),
+            ],
           ),
         ),
       ),

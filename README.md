@@ -2,7 +2,7 @@
 
 A coffee brew log with a Strava-like community: a Rust/Axum backend with Postgres, plus a Flutter app that also runs as a PWA.
 
-After the one-time setup, `./build.sh` starts Postgres, builds everything, runs the app on http://localhost:3001 and seeds the demo data. Use `--no-web` to skip the Flutter build. The steps it runs are listed below.
+After the one-time setup, `./build.sh` starts Postgres, builds everything, runs the app on http://localhost:3001 (and on this computer's LAN IP, for phones) and seeds the demo data. Use `--no-web` to skip the Flutter build. The steps it runs are listed below.
 
 ```sh
 # One-time setup (Arch/CachyOS)

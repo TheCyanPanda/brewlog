@@ -8,6 +8,7 @@ import '../services/suggestion_engine.dart';
 import '../state/app_data.dart';
 import '../theme.dart';
 import '../utils/format.dart';
+import '../widgets/chip_scroller.dart';
 import '../widgets/common.dart';
 import 'log_brew_screen.dart';
 
@@ -81,20 +82,17 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
 
     return <Widget>[
       const SectionHeader('Coffee', padding: EdgeInsets.fromLTRB(20, 8, 12, 8)),
-      SizedBox(
+      ChipScroller(
         height: 40,
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          scrollDirection: Axis.horizontal,
-          itemCount: bags.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 8),
-          itemBuilder: (BuildContext context, int i) => ChoiceChip(
-            label: Text(bags[i].originLabel),
-            selected: bags[i].id == bag.id,
-            showCheckmark: false,
-            onSelected: (_) => setState(() => _bagId = bags[i].id),
-          ),
-        ),
+        children: <Widget>[
+          for (final CoffeeBag b in bags)
+            ChoiceChip(
+              label: Text(b.originLabel),
+              selected: b.id == bag.id,
+              showCheckmark: false,
+              onSelected: (_) => setState(() => _bagId = b.id),
+            ),
+        ],
       ),
       const SectionHeader('I want more …'),
       Padding(

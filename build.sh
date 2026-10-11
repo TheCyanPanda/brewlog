@@ -9,6 +9,9 @@ PGDATA="$HOME/pgdata"
 PGPORT=3000
 APP_URL="http://localhost:3001"
 export PATH="$HOME/development/flutter/bin:$HOME/.cargo/bin:$PATH"
+# Listen on all interfaces so phones on the same network can open the app (overrides .env)
+export SERVER_HOST="${SERVER_HOST:-0.0.0.0}"
+LAN_IP=$(ip -o -4 addr show scope global | awk '$2 !~ /^(wg|tun|docker|br-|virbr)/ {split($4, a, "/"); print a[1]; exit}')
 
 step() { printf '\n\033[1;33m==> %s\033[0m\n' "$*"; }
 
@@ -46,5 +49,5 @@ done
 step "Demo data"
 node scripts/seed-demo.mjs "$APP_URL"
 
-step "Ready: $APP_URL  (demo/demo1234 or nordlys/demo1234). Ctrl+C to stop."
+step "Ready: $APP_URL${LAN_IP:+  ·  phone: http://$LAN_IP:3001}  (demo/demo1234 or nordlys/demo1234). Ctrl+C to stop."
 wait $BACKEND_PID

@@ -7,6 +7,7 @@ import '../state/app_data.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/charts.dart';
+import '../widgets/chip_scroller.dart';
 import '../widgets/common.dart';
 import 'coffee_year_screen.dart';
 
@@ -109,23 +110,17 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     return <Widget>[
       const SectionHeader('Dial-in per bag'),
-      SizedBox(
+      ChipScroller(
         height: 40,
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          scrollDirection: Axis.horizontal,
-          itemCount: bags.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 8),
-          itemBuilder: (BuildContext context, int i) {
-            final CoffeeBag b = bags[i];
-            return ChoiceChip(
+        children: <Widget>[
+          for (final CoffeeBag b in bags)
+            ChoiceChip(
               label: Text(b.originCountry == null ? b.displayName : '${b.originCountry} · ${b.roaster ?? ''}'),
               selected: b.id == bag.id,
               showCheckmark: false,
               onSelected: (_) => setState(() => _bagId = b.id),
-            );
-          },
-        ),
+            ),
+        ],
       ),
       const SizedBox(height: 6),
       AppCard(

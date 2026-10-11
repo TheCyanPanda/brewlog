@@ -99,29 +99,23 @@ class _BrewsScreenState extends State<BrewsScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 48,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text('All ${matching.length}'),
-                            selected: _rating == null,
-                            onSelected: (_) => setState(() => _rating = null),
-                          ),
+                        ChoiceChip(
+                          label: Text('All ${matching.length}'),
+                          selected: _rating == null,
+                          onSelected: (_) => setState(() => _rating = null),
                         ),
                         for (final String r in kRatings.reversed)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              avatar: Icon(ratingIcon(r), size: 16, color: ratingColor(r)),
-                              label: Text(ratingLabel(r)),
-                              selected: _rating == r,
-                              onSelected: (bool on) => setState(() => _rating = on ? r : null),
-                            ),
+                          ChoiceChip(
+                            avatar: Icon(ratingIcon(r), size: 16, color: ratingColor(r)),
+                            label: Text(ratingLabel(r)),
+                            selected: _rating == r,
+                            onSelected: (bool on) => setState(() => _rating = on ? r : null),
                           ),
                       ],
                     ),

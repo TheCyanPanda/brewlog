@@ -466,28 +466,25 @@ class _MapTabState extends State<_MapTab> with AutomaticKeepAliveClientMixin<_Ma
       padding: const EdgeInsets.only(top: 12, bottom: 32),
       children: <Widget>[
         // Type filters
-        SizedBox(
-          height: 40,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: <Widget>[
               for (final PlaceType t in PlaceType.values)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    avatar: Icon(_placeIcon(t), size: 16, color: placeColor(t)),
-                    label: Text(t.plural),
-                    selected: _types.contains(t),
-                    showCheckmark: false,
-                    onSelected: (bool on) => setState(() {
-                      if (on) {
-                        _types.add(t);
-                      } else if (_types.length > 1) {
-                        _types.remove(t);
-                      }
-                    }),
-                  ),
+                FilterChip(
+                  avatar: Icon(_placeIcon(t), size: 16, color: placeColor(t)),
+                  label: Text(t.plural),
+                  selected: _types.contains(t),
+                  showCheckmark: false,
+                  onSelected: (bool on) => setState(() {
+                    if (on) {
+                      _types.add(t);
+                    } else if (_types.length > 1) {
+                      _types.remove(t);
+                    }
+                  }),
                 ),
             ],
           ),

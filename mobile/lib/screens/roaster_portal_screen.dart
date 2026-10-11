@@ -8,6 +8,7 @@ import '../state/app_data.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/charts.dart';
+import '../widgets/chip_scroller.dart';
 import '../widgets/common.dart';
 
 class RoasterPortalScreen extends StatefulWidget {
@@ -51,24 +52,17 @@ class _RoasterPortalScreenState extends State<RoasterPortalScreen> {
           ),
 
           // Coffee picker
-          SizedBox(
+          ChipScroller(
             height: 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: <Widget>[
-                for (int i = 0; i < kCoffeeInsights.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(kCoffeeInsights[i].coffee),
-                      selected: _coffee == i,
-                      showCheckmark: false,
-                      onSelected: (_) => setState(() => _coffee = i),
-                    ),
-                  ),
-              ],
-            ),
+            children: <Widget>[
+              for (int i = 0; i < kCoffeeInsights.length; i++)
+                ChoiceChip(
+                  label: Text(kCoffeeInsights[i].coffee),
+                  selected: _coffee == i,
+                  showCheckmark: false,
+                  onSelected: (_) => setState(() => _coffee = i),
+                ),
+            ],
           ),
 
           const SectionHeader('Insights panel'),
